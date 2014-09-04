@@ -36,10 +36,14 @@ import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.util.ASTHelpers;
 
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.StatementTree;
 import com.sun.source.tree.Tree.Kind;
+import com.sun.source.tree.VariableTree;
 import com.sun.tools.javac.code.Attribute.Compound;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
+import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.TypeSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.code.Type;
@@ -120,9 +124,9 @@ public class UTemplater {
    * are guessed to be expression templates, and all other methods are guessed to be block
    * templates.
    */
-  public static Template<?> createTemplate(Context context, JCMethodDecl decl) {
-    ImmutableClassToInstanceMap<Annotation> annotations = 
-        UTemplater.annotationMap(decl.sym);
+  public static Template<?> createTemplate(Context context, MethodTree decl) {
+    MethodSymbol declSym = ASTHelpers.getSymbol(decl);
+    ImmutableClassToInstanceMap<Annotation> annotations = UTemplater.annotationMap(declSym);
     ImmutableMap<String, VarSymbol> freeExpressionVars = freeExpressionVariables(decl);
     Context subContext = new SubContext(context);
     if (annotations.containsKey(AlsoReverseTernary.class)) {
@@ -137,7 +141,7 @@ public class UTemplater {
           }
         }));
 
-    UType genericType = templater.template(decl.sym.type);
+    UType genericType = templater.template(declSym.type);
     List<UTypeVar> typeParameters;
     UMethodType methodType;
     if (genericType instanceof UForAll) {
@@ -152,7 +156,7 @@ public class UTemplater {
           "Expected genericType to be either a ForAll or a UMethodType, but was " + genericType);
     }
 
-    List<JCStatement> bodyStatements = decl.getBody().getStatements();
+    List<? extends StatementTree> bodyStatements = decl.getBody().getStatements();
     if (bodyStatements.size() == 1
         && Iterables.getOnlyElement(bodyStatements).getKind() == Kind.RETURN
         && context.get(REQUIRE_BLOCK_KEY) == null) {
@@ -163,8 +167,8 @@ public class UTemplater {
           templater.template(expression), methodType.getReturnType());
     } else {
       List<UStatement> templateStatements = new ArrayList<>();
-      for (JCStatement statement : bodyStatements) {
-        templateStatements.add(templater.template(statement));
+      for (StatementTree statement : bodyStatements) {
+        templateStatements.add(templater.template((JCStatement) statement));
       }
       return BlockTemplate.create(annotations, 
           typeParameters, expressionVarTypes, templateStatements);
@@ -172,10 +176,10 @@ public class UTemplater {
   }
 
   public static ImmutableMap<String, VarSymbol> freeExpressionVariables(
-      JCMethodDecl templateMethodDecl) {
+      MethodTree templateMethodDecl) {
     ImmutableMap.Builder<String, VarSymbol> builder = ImmutableMap.builder();
-    for (JCVariableDecl param : templateMethodDecl.getParameters()) {
-      builder.put(param.getName().toString(), param.sym);
+    for (VariableTree param : templateMethodDecl.getParameters()) {
+      builder.put(param.getName().toString(), ASTHelpers.getSymbol(param));
     }
     return builder.build();
   }
