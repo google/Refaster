@@ -18,7 +18,6 @@ package com.google.errorprone.refaster;
 
 import com.google.auto.value.AutoValue;
 
-import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Type.ArrayType;
 
 import javax.annotation.Nullable;
@@ -30,7 +29,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UArrayType implements UType {
+public abstract class UArrayType extends UType {
   public static UArrayType create(UType componentType) {
     return new AutoValue_UArrayType(componentType);
   }
@@ -39,12 +38,8 @@ public abstract class UArrayType implements UType {
 
   @Override
   @Nullable
-  public Unifier unify(Type target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof ArrayType) {
-      ArrayType arrayType = (ArrayType) target;
-      return componentType().unify(arrayType.getComponentType(), unifier);
-    }
-    return null;
+  public Unifier visitArrayType(ArrayType arrayType, @Nullable Unifier unifier) {
+    return componentType().unify(arrayType.getComponentType(), unifier);
   }
   
   @Override

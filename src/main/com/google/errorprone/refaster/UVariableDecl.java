@@ -18,11 +18,11 @@ package com.google.errorprone.refaster;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Optional;
+import com.google.errorprone.util.ASTHelpers;
 
 import com.sun.source.tree.ModifiersTree;
 import com.sun.source.tree.TreeVisitor;
 import com.sun.source.tree.VariableTree;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCModifiers;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
@@ -44,7 +44,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UVariableDecl implements UStatement, VariableTree {
+public abstract class UVariableDecl extends UStatement implements VariableTree {
 
   public static UVariableDecl create(
       String identifier, UExpression type, @Nullable UExpression initializer) {
@@ -70,14 +70,13 @@ public abstract class UVariableDecl implements UStatement, VariableTree {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCVariableDecl
-        && unifier.getBinding(key()) == null) {
-      JCVariableDecl decl = (JCVariableDecl) target;
+  public Unifier visitVariable(VariableTree decl, @Nullable Unifier unifier) {
+    if (unifier.getBinding(key()) == null) {
       unifier = getType().unify(decl.getType(), unifier);
       unifier = Unifier.unifyNullable(unifier, getInitializer(), decl.getInitializer());
       if (unifier != null) {
-        unifier.putBinding(key(), LocalVarBinding.create(decl.sym, decl.getModifiers()));
+        unifier.putBinding(key(),
+            LocalVarBinding.create(ASTHelpers.getSymbol(decl), decl.getModifiers()));
         return unifier;
       }
     }
@@ -91,7 +90,7 @@ public abstract class UVariableDecl implements UStatement, VariableTree {
     Name name;
     TreeMaker maker = inliner.maker();
     if (binding.isPresent()) {
-      modifiers = binding.get().getModifiers();
+      modifiers = (JCModifiers) binding.get().getModifiers();
       name = binding.get().getName();
     } else {
       modifiers = maker.Modifiers(0L);

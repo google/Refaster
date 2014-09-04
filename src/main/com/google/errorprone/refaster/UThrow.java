@@ -20,7 +20,6 @@ import com.google.auto.value.AutoValue;
 
 import com.sun.source.tree.ThrowTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCThrow;
 
 import javax.annotation.Nullable;
@@ -31,7 +30,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UThrow implements UStatement, ThrowTree {
+public abstract class UThrow extends UStatement implements ThrowTree {
   public static UThrow create(UExpression expression) {
     return new AutoValue_UThrow(expression);
   }
@@ -51,12 +50,8 @@ public abstract class UThrow implements UStatement, ThrowTree {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCThrow) {
-      JCThrow throwStmt = (JCThrow) target;
-      return getExpression().unify(throwStmt.getExpression(), unifier);
-    }
-    return null;
+  public Unifier visitThrow(ThrowTree throwStmt, @Nullable Unifier unifier) {
+    return getExpression().unify(throwStmt.getExpression(), unifier);
   }
 
   @Override

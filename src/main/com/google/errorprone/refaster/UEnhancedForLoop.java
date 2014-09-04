@@ -20,7 +20,6 @@ import com.google.auto.value.AutoValue;
 
 import com.sun.source.tree.EnhancedForLoopTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCEnhancedForLoop;
 
 import javax.annotation.Nullable;
@@ -31,7 +30,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UEnhancedForLoop implements UStatement, EnhancedForLoopTree {
+public abstract class UEnhancedForLoop extends UStatement implements EnhancedForLoopTree {
   public static UEnhancedForLoop create(
       UVariableDecl variable, UExpression elements, UStatement statement) {
     return new AutoValue_UEnhancedForLoop(variable, elements, statement);
@@ -66,13 +65,9 @@ public abstract class UEnhancedForLoop implements UStatement, EnhancedForLoopTre
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (target instanceof JCEnhancedForLoop) {
-      JCEnhancedForLoop loop = (JCEnhancedForLoop) target;
-      unifier = getVariable().unify(loop.getVariable(), unifier);
-      unifier = getExpression().unify(loop.getExpression(), unifier);
-      return getStatement().unify(loop.getStatement(), unifier);
-    }
-    return null;
+  public Unifier visitEnhancedForLoop(EnhancedForLoopTree loop, @Nullable Unifier unifier) {
+    unifier = getVariable().unify(loop.getVariable(), unifier);
+    unifier = getExpression().unify(loop.getExpression(), unifier);
+    return getStatement().unify(loop.getStatement(), unifier);
   }
 }

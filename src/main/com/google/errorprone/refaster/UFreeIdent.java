@@ -20,11 +20,11 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.Iterables;
 import com.google.errorprone.util.ASTHelpers;
 
+import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.Tree;
 import com.sun.source.util.TreeScanner;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
-import com.sun.tools.javac.tree.JCTree.JCIdent;
 import com.sun.tools.javac.util.Names;
 
 import javax.annotation.Nullable;
@@ -64,12 +64,13 @@ public abstract class UFreeIdent extends UIdent {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable final Unifier unifier) {
+  protected Unifier defaultAction(Tree target, @Nullable final Unifier unifier) {
     if (unifier != null && target instanceof JCExpression) {
       JCExpression expression = (JCExpression) target;
       
       Names names = Names.instance(unifier.getContext());
-      if (expression instanceof JCIdent && ((JCIdent) expression).name.equals(names._super)) {
+      if (expression instanceof IdentifierTree
+          && ((IdentifierTree) expression).getName().equals(names._super)) {
         return null;
       }
       

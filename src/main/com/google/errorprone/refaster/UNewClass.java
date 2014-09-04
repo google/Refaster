@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 
 import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCNewClass;
 
@@ -79,17 +78,13 @@ public abstract class UNewClass extends UExpression implements NewClassTree {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCNewClass) {
-      JCNewClass newClass = (JCNewClass) target;
-      unifier = Unifier.unifyNullable(
-          unifier, getEnclosingExpression(), newClass.getEnclosingExpression());
-      unifier = Unifier.unifyList(unifier, getTypeArguments(), newClass.getTypeArguments());
-      unifier = getIdentifier().unify(newClass.getIdentifier(), unifier);
-      unifier = Unifier.unifyNullable(unifier, getClassBody(), newClass.getClassBody());
-      return Unifier.unifyList(unifier, getArguments(), newClass.getArguments());
-    }
-    return null;
+  public Unifier visitNewClass(NewClassTree newClass, @Nullable Unifier unifier) {
+    unifier = Unifier.unifyNullable(
+        unifier, getEnclosingExpression(), newClass.getEnclosingExpression());
+    unifier = Unifier.unifyList(unifier, getTypeArguments(), newClass.getTypeArguments());
+    unifier = getIdentifier().unify(newClass.getIdentifier(), unifier);
+    unifier = Unifier.unifyNullable(unifier, getClassBody(), newClass.getClassBody());
+    return Unifier.unifyList(unifier, getArguments(), newClass.getArguments());
   }
 
   @Override

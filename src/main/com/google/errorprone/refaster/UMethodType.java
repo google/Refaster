@@ -33,7 +33,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UMethodType implements UType {
+public abstract class UMethodType extends UType {
 
   public static UMethodType create(UType returnType, UType... parameterTypes) {
     return create(returnType, ImmutableList.copyOf(parameterTypes));
@@ -49,13 +49,9 @@ public abstract class UMethodType implements UType {
 
   @Override
   @Nullable
-  public Unifier unify(Type target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof MethodType) {
-      MethodType methodTy = (MethodType) target;
-      // Don't unify the return type, which doesn't matter in overload resolution.
-      return Unifier.unifyList(unifier, getParameterTypes(), methodTy.getParameterTypes());
-    }
-    return null;
+  public Unifier visitMethodType(MethodType methodTy, @Nullable Unifier unifier) {
+    // Don't unify the return type, which doesn't matter in overload resolution.
+    return Unifier.unifyList(unifier, getParameterTypes(), methodTy.getParameterTypes());
   }
   
   @Override

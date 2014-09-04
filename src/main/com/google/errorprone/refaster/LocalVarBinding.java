@@ -18,8 +18,8 @@ package com.google.errorprone.refaster;
 
 import com.google.auto.value.AutoValue;
 
+import com.sun.source.tree.ModifiersTree;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
-import com.sun.tools.javac.tree.JCTree.JCModifiers;
 import com.sun.tools.javac.util.Name;
 
 /**
@@ -29,13 +29,13 @@ import com.sun.tools.javac.util.Name;
  */
 @AutoValue
 public abstract class LocalVarBinding {
-  public static LocalVarBinding create(VarSymbol symbol, JCModifiers modifiers) {
+  public static LocalVarBinding create(VarSymbol symbol, ModifiersTree modifiers) {
     return new AutoValue_LocalVarBinding(symbol, modifiers);
   }
 
   public abstract VarSymbol getSymbol();
 
-  public abstract JCModifiers getModifiers();
+  public abstract ModifiersTree getModifiers();
 
   public Name getName() {
     return getSymbol().getSimpleName();

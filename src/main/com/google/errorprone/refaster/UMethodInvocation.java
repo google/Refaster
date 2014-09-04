@@ -24,7 +24,6 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.TreeVisitor;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
 
@@ -55,14 +54,11 @@ public abstract class UMethodInvocation extends UExpression implements MethodInv
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCMethodInvocation) {
-      JCMethodInvocation methodInvocation = (JCMethodInvocation) target;
-      unifier = getMethodSelect().unify(methodInvocation.getMethodSelect(), unifier);
-      return Unifier.unifyList(
-          unifier, getArguments(), methodInvocation.getArguments(), allowVarargs());
-    }
-    return null;
+  public Unifier visitMethodInvocation(
+      MethodInvocationTree methodInvocation, @Nullable Unifier unifier) {
+    unifier = getMethodSelect().unify(methodInvocation.getMethodSelect(), unifier);
+    return Unifier.unifyList(
+        unifier, getArguments(), methodInvocation.getArguments(), allowVarargs());
   }
 
   @Override

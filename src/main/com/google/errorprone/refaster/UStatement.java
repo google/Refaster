@@ -24,5 +24,5 @@ import com.sun.tools.javac.tree.JCTree.JCStatement;
  *
  * @author lowasser@google.com (Louis Wasserman)
  */
-public interface UStatement extends UTree<JCStatement>, StatementTree {
+public abstract class UStatement extends UTree<JCStatement> implements StatementTree {
 }

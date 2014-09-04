@@ -18,8 +18,8 @@ package com.google.errorprone.refaster;
 
 import com.google.auto.value.AutoValue;
 
+import com.sun.source.tree.Tree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 
 import java.util.Set;
@@ -57,10 +57,9 @@ public abstract class UOfKind extends UExpression {
   
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    return allowed().contains(target.getKind())
-        ? expression().unify(target, unifier)
+  protected Unifier defaultAction(Tree tree, @Nullable Unifier unifier) {
+    return allowed().contains(tree.getKind())
+        ? expression().unify(tree, unifier)
         : null;
   }
-
 }

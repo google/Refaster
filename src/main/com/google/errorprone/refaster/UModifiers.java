@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.sun.source.tree.ModifiersTree;
 import com.sun.source.tree.TreeVisitor;
 import com.sun.tools.javac.code.Flags;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCAnnotation;
 import com.sun.tools.javac.tree.JCTree.JCModifiers;
 import com.sun.tools.javac.util.List;
@@ -39,7 +38,7 @@ import javax.lang.model.element.Modifier;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UModifiers implements UTree<JCModifiers>, ModifiersTree {
+public abstract class UModifiers extends UTree<JCModifiers> implements ModifiersTree {
   public static UModifiers create(long flagBits, UAnnotation... annotations) {
     return create(flagBits, ImmutableList.copyOf(annotations));
   }
@@ -62,12 +61,8 @@ public abstract class UModifiers implements UTree<JCModifiers>, ModifiersTree {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCModifiers) {
-      JCModifiers modifiers = (JCModifiers) target;
-      return (flagBits() == modifiers.flags) ? unifier : null; 
-    }
-    return null;
+  public Unifier visitModifiers(ModifiersTree modifier, @Nullable Unifier unifier) {
+    return getFlags().equals(modifier.getFlags()) ? unifier : null;
   }
 
   @Override

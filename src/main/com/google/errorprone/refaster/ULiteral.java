@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableBiMap;
 import com.sun.source.tree.LiteralTree;
 import com.sun.source.tree.TreeVisitor;
 import com.sun.tools.javac.code.TypeTags;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCLiteral;
 
 import javax.annotation.Nullable;
@@ -96,13 +95,9 @@ public abstract class ULiteral extends UExpression implements LiteralTree {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCLiteral) {
-      JCLiteral literal = (JCLiteral) target;
-      return getKind().equals(literal.getKind()) && Objects.equal(getValue(), literal.getValue())
-          ? unifier : null;
-    }
-    return null;
+  public Unifier visitLiteral(LiteralTree literal, @Nullable Unifier unifier) {
+    return getKind().equals(literal.getKind()) && Objects.equal(getValue(), literal.getValue())
+        ? unifier : null;
   }
 
   @Override

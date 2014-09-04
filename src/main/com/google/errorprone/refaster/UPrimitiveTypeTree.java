@@ -20,9 +20,7 @@ import com.google.auto.value.AutoValue;
 
 import com.sun.source.tree.PrimitiveTypeTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
-import com.sun.tools.javac.tree.JCTree.JCPrimitiveTypeTree;
 
 import javax.annotation.Nullable;
 import javax.lang.model.type.TypeKind;
@@ -54,12 +52,8 @@ public abstract class UPrimitiveTypeTree extends UExpression implements Primitiv
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCPrimitiveTypeTree) {
-      JCPrimitiveTypeTree tree = (JCPrimitiveTypeTree) target;
-      return getPrimitiveType().unify(tree.type, unifier);
-    }
-    return null;
+  public Unifier visitPrimitiveType(PrimitiveTypeTree tree, @Nullable Unifier unifier) {
+    return getPrimitiveTypeKind().equals(tree.getPrimitiveTypeKind()) ? unifier : null;
   }
 
   @Override

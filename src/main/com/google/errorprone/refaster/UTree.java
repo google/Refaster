@@ -17,6 +17,7 @@
 package com.google.errorprone.refaster;
 
 import com.sun.source.tree.Tree;
+import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.tools.javac.tree.JCTree;
 
 /**
@@ -26,5 +27,10 @@ import com.sun.tools.javac.tree.JCTree;
  * @param <T> The type this tree inlines to.
  * @author Louis Wasserman (lowasser@google.com)
  */
-public interface UTree<T extends JCTree> extends Unifiable<JCTree>, Inlineable<T>, Tree {
+public abstract class UTree<T extends JCTree> extends SimpleTreeVisitor<Unifier, Unifier>
+    implements Unifiable<Tree>, Inlineable<T>, Tree {
+  @Override
+  public Unifier unify(Tree target, Unifier unifier) {
+    return (target != null && unifier != null) ? target.accept(this, unifier) : null;
+  }
 }

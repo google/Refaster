@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 
 import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCBlock;
 import com.sun.tools.javac.tree.JCTree.JCStatement;
 
@@ -35,7 +34,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UBlock implements UStatement, BlockTree {
+public abstract class UBlock extends UStatement implements BlockTree {
   public static UBlock create(List<UStatement> statements) {
     return new AutoValue_UBlock(ImmutableList.copyOf(statements));
   }
@@ -49,12 +48,8 @@ public abstract class UBlock implements UStatement, BlockTree {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCBlock) {
-      JCBlock block = (JCBlock) target;
-      return Unifier.unifyList(unifier, getStatements(), block.getStatements());
-    }
-    return null;
+  public Unifier visitBlock(BlockTree block, @Nullable Unifier unifier) {
+    return Unifier.unifyList(unifier, getStatements(), block.getStatements());
   }
 
   @Override

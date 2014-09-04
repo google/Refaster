@@ -19,10 +19,10 @@ package com.google.errorprone.refaster;
 import com.google.auto.value.AutoValue;
 
 import com.sun.source.tree.ParenthesizedTree;
+import com.sun.source.tree.Tree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
+import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.tools.javac.tree.JCTree.JCParens;
-import com.sun.tools.javac.tree.TreeInfo;
 
 import javax.annotation.Nullable;
 
@@ -40,14 +40,26 @@ public abstract class UParens extends UExpression implements ParenthesizedTree {
   @Override
   public abstract UExpression getExpression();
 
+  private static final TreeVisitor<Tree, Void> SKIP_PARENS = new SimpleTreeVisitor<Tree, Void>() {
+    @Override
+    protected Tree defaultAction(Tree node, Void v) {
+      return node;
+    }
+
+    @Override
+    public Tree visitParenthesized(ParenthesizedTree node, Void v) {
+      return node.getExpression().accept(this, null);
+    }
+  };
+  
+  static Tree skipParens(Tree tree) {
+    return tree.accept(SKIP_PARENS, null);
+  }
+
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    /*
-     * During unification, parentheses are liberalized so they don't care if the target expression
-     * is parenthesized or not.
-     */
-    return (unifier == null) ? null : getExpression().unify(TreeInfo.skipParens(target), unifier);
+  protected Unifier defaultAction(Tree tree, @Nullable Unifier unifier) {
+    return getExpression().unify(skipParens(tree), unifier);
   }
 
   @Override

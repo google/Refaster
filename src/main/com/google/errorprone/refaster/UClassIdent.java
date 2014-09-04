@@ -20,12 +20,12 @@ import com.google.auto.value.AutoValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.errorprone.util.ASTHelpers;
 
+import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
-import com.sun.tools.javac.tree.TreeInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,8 +73,8 @@ public abstract class UClassIdent extends UIdent {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    Symbol symbol = TreeInfo.symbol(target);
+  protected Unifier defaultAction(Tree tree, @Nullable Unifier unifier) {
+    Symbol symbol = ASTHelpers.getSymbol(tree);
     return symbol != null && symbol.getQualifiedName().contentEquals(getQualifiedName()) 
         ? unifier : null;
   }

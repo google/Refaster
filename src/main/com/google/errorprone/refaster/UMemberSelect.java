@@ -17,11 +17,13 @@
 package com.google.errorprone.refaster;
 
 import com.google.auto.value.AutoValue;
+import com.google.errorprone.util.ASTHelpers;
 
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.TreeVisitor;
 import com.sun.tools.javac.code.Type;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCFieldAccess;
 import com.sun.tools.javac.tree.JCTree.JCIdent;
@@ -56,32 +58,28 @@ public abstract class UMemberSelect extends UExpression implements MemberSelectT
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null) {
-      if (target instanceof JCFieldAccess) {
-        JCFieldAccess fieldAccess = (JCFieldAccess) target;
-        if (fieldAccess.sym != null) {
-          unifier = fieldAccess.getIdentifier().contentEquals(identifier()) ? unifier : null;
-          unifier = getExpression().unify(fieldAccess.getExpression(), unifier);
-          return type().unify(fieldAccess.sym.asType(), unifier);
-        }
-      } else if (target instanceof JCIdent) {
-        JCIdent ident = (JCIdent) target;
-        if (ident.getName().contentEquals(identifier())) {
-          /*
-           * We artificially create a "this" expression and then unify the template receiver with
-           * that.
-           */
-          JCExpression thisIdent = unifier.thisExpression(receiverType(ident));
-          unifier = getExpression().unify(thisIdent, unifier);
-          return type().unify(ident.sym.asType(), unifier);
-        }
-      }
+  public Unifier visitMemberSelect(MemberSelectTree fieldAccess, @Nullable Unifier unifier) {
+    if (ASTHelpers.getSymbol(fieldAccess) != null) {
+      unifier = fieldAccess.getIdentifier().contentEquals(identifier()) ? unifier : null;
+      unifier = getExpression().unify(fieldAccess.getExpression(), unifier);
+      return type().unify(ASTHelpers.getSymbol(fieldAccess).asType(), unifier);
+    }
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public Unifier visitIdentifier(IdentifierTree ident, @Nullable Unifier unifier) {
+    if (ident.getName().contentEquals(identifier())) {
+      // We artificially create a "this" expression and then unify the template receiver with that.
+      JCExpression thisIdent = unifier.thisExpression(receiverType(ident));
+      unifier = getExpression().unify(thisIdent, unifier);
+      return type().unify(ASTHelpers.getSymbol(ident).asType(), unifier);
     }
     return null;
   }
   
-  private static Type receiverType(JCExpression expressionTree) {
+  private static Type receiverType(ExpressionTree expressionTree) {
     if (expressionTree instanceof JCFieldAccess) {
       JCFieldAccess methodSelectFieldAccess = (JCFieldAccess) expressionTree;
       return methodSelectFieldAccess.sym.owner.type;

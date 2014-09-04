@@ -20,7 +20,6 @@ import com.google.auto.value.AutoValue;
 
 import com.sun.source.tree.TreeVisitor;
 import com.sun.source.tree.TypeCastTree;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCTypeCast;
 
 import javax.annotation.Nullable;
@@ -44,13 +43,9 @@ public abstract class UTypeCast extends UExpression implements TypeCastTree {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCTypeCast) {
-      JCTypeCast cast = (JCTypeCast) target;
-      unifier = getType().unify(cast.getType(), unifier);
-      return getExpression().unify(cast.getExpression(), unifier);
-    }
-    return null;
+  public Unifier visitTypeCast(TypeCastTree cast, @Nullable Unifier unifier) {
+    unifier = getType().unify(cast.getType(), unifier);
+    return getExpression().unify(cast.getExpression(), unifier);
   }
 
   @Override

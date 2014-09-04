@@ -20,7 +20,6 @@ import com.google.auto.value.AutoValue;
 
 import com.sun.source.tree.ArrayAccessTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCArrayAccess;
 
 import javax.annotation.Nullable;
@@ -44,13 +43,9 @@ public abstract class UArrayAccess extends UExpression implements ArrayAccessTre
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCArrayAccess) {
-      JCArrayAccess arrayAccess = (JCArrayAccess) target;
-      unifier = getExpression().unify(arrayAccess.getExpression(), unifier);
-      return getIndex().unify(arrayAccess.getIndex(), unifier);
-    }
-    return null;
+  public Unifier visitArrayAccess(ArrayAccessTree arrayAccess, @Nullable Unifier unifier) {
+    unifier = getExpression().unify(arrayAccess.getExpression(), unifier);
+    return getIndex().unify(arrayAccess.getIndex(), unifier);
   }
 
   @Override

@@ -33,7 +33,7 @@ import javax.annotation.Nullable;
  * @author Louis Wasserman
  */
 @AutoValue
-public abstract class UClassType implements UType {
+public abstract class UClassType extends UType {
   public static UClassType create(String fullyQualifiedClass, List<UType> typeArguments) {
     return new AutoValue_UClassType(fullyQualifiedClass, ImmutableList.copyOf(typeArguments));
   }
@@ -47,14 +47,10 @@ public abstract class UClassType implements UType {
 
   @Override
   @Nullable
-  public Unifier unify(Type target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof ClassType) {
-      ClassType classType = (ClassType) target;
-      unifier = classType.tsym.getQualifiedName().contentEquals(fullyQualifiedClass()) 
-          ? unifier : null;
-      return Unifier.unifyList(unifier, typeArguments(), classType.getTypeArguments());
-    }
-    return null;
+  public Unifier visitClassType(ClassType classType, @Nullable Unifier unifier) {
+    unifier = classType.tsym.getQualifiedName().contentEquals(fullyQualifiedClass()) 
+        ? unifier : null;
+    return Unifier.unifyList(unifier, typeArguments(), classType.getTypeArguments());
   }
   
   @Override

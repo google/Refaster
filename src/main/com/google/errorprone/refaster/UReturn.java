@@ -20,7 +20,6 @@ import com.google.auto.value.AutoValue;
 
 import com.sun.source.tree.ReturnTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCReturn;
 
 import javax.annotation.Nullable;
@@ -31,7 +30,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com
  */
 @AutoValue
-public abstract class UReturn implements UStatement, ReturnTree {
+public abstract class UReturn extends UStatement implements ReturnTree {
   public static UReturn create(UExpression expression) {
     return new AutoValue_UReturn(expression);
   }
@@ -57,11 +56,7 @@ public abstract class UReturn implements UStatement, ReturnTree {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCReturn) {
-      JCReturn ret = (JCReturn) target;
-      return Unifier.unifyNullable(unifier, getExpression(), ret.getExpression());
-    }
-    return null;
+  public Unifier visitReturn(ReturnTree ret, @Nullable Unifier unifier) {
+    return Unifier.unifyNullable(unifier, getExpression(), ret.getExpression());
   }
 }

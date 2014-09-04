@@ -92,15 +92,11 @@ public abstract class UBinary extends UExpression implements BinaryTree {
   public abstract UExpression getRightOperand();
 
   @Override
-  @Nullable 
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCBinary) {
-      JCBinary binary = (JCBinary) target;
-      unifier = getKind().equals(binary.getKind()) ? unifier : null;
-      unifier = getLeftOperand().unify(binary.getLeftOperand(), unifier);
-      return getRightOperand().unify(binary.getRightOperand(), unifier);
-    }
-    return null;
+  @Nullable
+  public Unifier visitBinary(BinaryTree binary, @Nullable Unifier unifier) {
+    unifier = getKind().equals(binary.getKind()) ? unifier : null;
+    unifier = getLeftOperand().unify(binary.getLeftOperand(), unifier);
+    return getRightOperand().unify(binary.getRightOperand(), unifier);
   }
 
   @Override

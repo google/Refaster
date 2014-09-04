@@ -18,8 +18,9 @@ package com.google.errorprone.refaster;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Optional;
+import com.google.errorprone.util.ASTHelpers;
 
-import com.sun.tools.javac.tree.JCTree;
+import com.sun.source.tree.IdentifierTree;
 import com.sun.tools.javac.tree.JCTree.JCIdent;
 
 import javax.annotation.Nullable;
@@ -53,15 +54,10 @@ public abstract class ULocalVarIdent extends UIdent {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCIdent) {
-      JCIdent ident = (JCIdent) target;
-      LocalVarBinding binding = unifier.getBinding(key());
-      if (binding != null && ident.sym.equals(binding.getSymbol())) {
-        return unifier;
-      }
-    }
-    return null;
+  public Unifier visitIdentifier(IdentifierTree ident, @Nullable Unifier unifier) {
+    LocalVarBinding binding = unifier.getBinding(key());
+    return (binding != null && ASTHelpers.getSymbol(ident).equals(binding.getSymbol()))
+        ? unifier : null;
   }
 
   @Override

@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 
 import com.sun.source.tree.ForLoopTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
 import com.sun.tools.javac.tree.JCTree.JCForLoop;
 
@@ -35,7 +34,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UForLoop implements UStatement, ForLoopTree {
+public abstract class UForLoop extends UStatement implements ForLoopTree {
   
   public static UForLoop create(
       Iterable<? extends UStatement> initializer, @Nullable UExpression condition,
@@ -59,17 +58,13 @@ public abstract class UForLoop implements UStatement, ForLoopTree {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, Unifier unifier) {
-    if (unifier != null && target instanceof JCForLoop) {
-      JCForLoop loop = (JCForLoop) target;
-      unifier = Unifier.unifyList(unifier, getInitializer(), loop.getInitializer());
-      unifier = Unifier.unifyNullable(unifier, getCondition(), loop.getCondition());
-      unifier = Unifier.unifyList(unifier, getUpdate(), loop.getUpdate());
-      return getStatement().unify(loop.getStatement(), unifier);
-    }
-    return null;
+  public Unifier visitForLoop(ForLoopTree loop, @Nullable Unifier unifier) {
+    unifier = Unifier.unifyList(unifier, getInitializer(), loop.getInitializer());
+    unifier = Unifier.unifyNullable(unifier, getCondition(), loop.getCondition());
+    unifier = Unifier.unifyList(unifier, getUpdate(), loop.getUpdate());
+    return getStatement().unify(loop.getStatement(), unifier);
   }
-
+  
   @Override
   public <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
     return visitor.visitForLoop(this, data);

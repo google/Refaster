@@ -25,10 +25,8 @@ import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.TreeVisitor;
 import com.sun.source.util.TreePath;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCCompilationUnit;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
-import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.util.Context;
 
 import javax.annotation.Nullable;
@@ -55,13 +53,10 @@ public abstract class UMatches extends UExpression {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    JCExpression exprTarget = TreeInfo.skipParens((JCExpression) target);
+  protected Unifier defaultAction(Tree target, @Nullable Unifier unifier) {
+    Tree exprTarget = UParens.skipParens(target);
     Unifier success = expression().unify(exprTarget, unifier);
-    if (success != null && matches(exprTarget, success) == positive()) {
-      return success;
-    }
-    return null;
+    return (success != null && matches(exprTarget, success) == positive()) ? success : null;
   }
 
   @Override
@@ -81,11 +76,12 @@ public abstract class UMatches extends UExpression {
 
   private transient Matcher<? super ExpressionTree> matcher;
 
-  private boolean matches(JCExpression target, Unifier unifier) {
+  private boolean matches(Tree target, Unifier unifier) {
     if (matcher == null) {
       matcher = makeMatcher(matcherClass());
     }
-    return matcher.matches(target, makeVisitorState(target, unifier));
+    return target instanceof ExpressionTree
+        && matcher.matches((ExpressionTree) target, makeVisitorState(target, unifier));
   }
 
   private static <T> T makeMatcher(Class<T> klass) {
@@ -96,7 +92,7 @@ public abstract class UMatches extends UExpression {
     }
   }
 
-  private static VisitorState makeVisitorState(JCExpression target, Unifier unifier) {
+  private static VisitorState makeVisitorState(Tree target, Unifier unifier) {
     Context context = unifier.getContext();
     TreePath path = TreePath.getPath(context.get(JCCompilationUnit.class), target);
     return new VisitorState(context, new DummyMatchListener()).withPath(path);

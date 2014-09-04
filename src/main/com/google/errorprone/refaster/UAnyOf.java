@@ -17,13 +17,11 @@
 package com.google.errorprone.refaster;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
+import com.sun.source.tree.Tree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
-import com.sun.tools.javac.tree.TreeInfo;
 
 import javax.annotation.Nullable;
 
@@ -55,18 +53,17 @@ public abstract class UAnyOf extends UExpression {
   
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null) {
-      for (UExpression expression : expressions()) {
-        Unifier success = expression.unify(TreeInfo.skipParens(target), unifier.fork());
-        if (success != null) {
-          return success;
-        }
+  protected Unifier defaultAction(Tree tree, @Nullable Unifier unifier) {
+    tree = UParens.skipParens(tree);
+    for (UExpression expression : expressions()) {
+      Unifier success = expression.unify(tree, unifier.fork());
+      if (success != null) {
+        return success;
       }
     }
     return null;
   }
-
+  
   @Override
   public JCExpression inline(Inliner inliner) throws CouldNotResolveImportException {
     throw new UnsupportedOperationException("anyOf should not appear in an @AfterTemplate");

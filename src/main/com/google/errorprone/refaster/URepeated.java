@@ -18,10 +18,12 @@ package com.google.errorprone.refaster;
 
 import com.google.auto.value.AutoValue;
 
+import com.sun.source.tree.Tree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
+
 import java.util.List;
+
 import javax.annotation.Nullable;
 
 /**
@@ -38,8 +40,8 @@ public abstract class URepeated extends UExpression {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    return expression().unify(target, unifier);
+  protected Unifier defaultAction(Tree node, @Nullable Unifier unifier) {
+    return expression().unify(node, unifier);
   }
 
   @Override
@@ -60,10 +62,9 @@ public abstract class URepeated extends UExpression {
 
   /** Gets the binding of the underlying identifier in the unifier. */
   public JCExpression getUnderlyingBinding(Unifier unifier) {
-    if (unifier == null) {
-      return null;
-    }
-    return unifier.getBinding(new UFreeIdent.Key(identifier()));
+    return (unifier == null)
+        ? null
+        : unifier.getBinding(new UFreeIdent.Key(identifier()));
   }
 
   public Key key() {

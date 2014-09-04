@@ -20,7 +20,6 @@ import com.google.auto.value.AutoValue;
 
 import com.sun.source.tree.ConditionalExpressionTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCConditional;
 
 import javax.annotation.Nullable;
@@ -55,14 +54,11 @@ public abstract class UConditional extends UExpression implements ConditionalExp
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCConditional) {
-      JCConditional conditional = (JCConditional) target;
-      unifier = getCondition().unify(conditional.getCondition(), unifier);
-      unifier = getTrueExpression().unify(conditional.getTrueExpression(), unifier);
-      return getFalseExpression().unify(conditional.getFalseExpression(), unifier);
-    }
-    return null;
+  public Unifier visitConditionalExpression(
+      ConditionalExpressionTree conditional, Unifier unifier) {
+    unifier = getCondition().unify(conditional.getCondition(), unifier);
+    unifier = getTrueExpression().unify(conditional.getTrueExpression(), unifier);
+    return getFalseExpression().unify(conditional.getFalseExpression(), unifier);
   }
 
   @Override

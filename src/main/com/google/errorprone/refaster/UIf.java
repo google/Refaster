@@ -20,7 +20,6 @@ import com.google.auto.value.AutoValue;
 
 import com.sun.source.tree.IfTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCIf;
 
 import javax.annotation.Nullable;
@@ -31,7 +30,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UIf implements UStatement, IfTree {
+public abstract class UIf extends UStatement implements IfTree {
   public static UIf create(
       UExpression condition, UStatement thenStatement, UStatement elseStatement) {
     return new AutoValue_UIf(condition, thenStatement, elseStatement);
@@ -59,14 +58,10 @@ public abstract class UIf implements UStatement, IfTree {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, Unifier unifier) {
-    if (unifier != null && target instanceof JCIf) {
-      JCIf ifTree = (JCIf) target;
-      unifier = getCondition().unify(ifTree.getCondition(), unifier);
-      unifier = getThenStatement().unify(ifTree.getThenStatement(), unifier);
-      return Unifier.unifyNullable(unifier, getElseStatement(), ifTree.getElseStatement());
-    }
-    return null;
+  public Unifier visitIf(IfTree ifTree, @Nullable Unifier unifier) {
+    unifier = getCondition().unify(ifTree.getCondition(), unifier);
+    unifier = getThenStatement().unify(ifTree.getThenStatement(), unifier);
+    return Unifier.unifyNullable(unifier, getElseStatement(), ifTree.getElseStatement());
   }
 
   @Override

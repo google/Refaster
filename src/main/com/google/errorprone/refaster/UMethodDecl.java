@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.TreeVisitor;
 import com.sun.source.tree.TypeParameterTree;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
 import com.sun.tools.javac.tree.JCTree.JCTypeParameter;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
@@ -37,7 +36,7 @@ import javax.lang.model.element.Name;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UMethodDecl implements UTree<JCMethodDecl>, MethodTree {
+public abstract class UMethodDecl extends UTree<JCMethodDecl> implements MethodTree {
   public static UMethodDecl create(UModifiers modifiers, String name, UExpression returnType,
       Iterable<UVariableDecl> parameters, Iterable<UExpression> thrown, UBlock body) {
     return new AutoValue_UMethodDecl(modifiers, name, returnType, ImmutableList.copyOf(parameters), 
@@ -56,16 +55,12 @@ public abstract class UMethodDecl implements UTree<JCMethodDecl>, MethodTree {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (target instanceof JCMethodDecl && unifier != null) {
-      JCMethodDecl decl = (JCMethodDecl) target;
-      unifier = getName().contentEquals(decl.getName()) ? unifier : null;
-      unifier = getReturnType().unify(decl.getReturnType(), unifier);
-      unifier = Unifier.unifyList(unifier, getParameters(), decl.getParameters());
-      unifier = Unifier.unifyList(unifier, getThrows(), decl.getThrows());
-      return getBody().unify(decl.getBody(), unifier);
-    }
-    return null;
+  public Unifier visitMethod(MethodTree decl, @Nullable Unifier unifier) {
+    unifier = getName().contentEquals(decl.getName()) ? unifier : null;
+    unifier = getReturnType().unify(decl.getReturnType(), unifier);
+    unifier = Unifier.unifyList(unifier, getParameters(), decl.getParameters());
+    unifier = Unifier.unifyList(unifier, getThrows(), decl.getThrows());
+    return getBody().unify(decl.getBody(), unifier);
   }
 
   @Override

@@ -17,12 +17,12 @@
 package com.google.errorprone.refaster;
 
 import com.google.auto.value.AutoValue;
+import com.google.errorprone.util.ASTHelpers;
 
+import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
-import com.sun.tools.javac.tree.TreeInfo;
 
 import javax.annotation.Nullable;
 import javax.lang.model.element.Name;
@@ -60,8 +60,8 @@ public abstract class UStaticIdent extends UIdent {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    Symbol symbol = TreeInfo.symbol(target);
+  protected Unifier defaultAction(Tree node, @Nullable Unifier unifier) {
+    Symbol symbol = ASTHelpers.getSymbol(node);
     if (symbol != null && symbol.getEnclosingElement() != null
         && symbol.getEnclosingElement().getQualifiedName()
             .contentEquals(classIdent().getQualifiedName())
@@ -70,7 +70,7 @@ public abstract class UStaticIdent extends UIdent {
     }
     return null;
   }
-
+  
   @Override
   public Name getName() {
     return StringName.of(member());

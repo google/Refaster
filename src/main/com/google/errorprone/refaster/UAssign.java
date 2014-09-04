@@ -20,7 +20,6 @@ import com.google.auto.value.AutoValue;
 
 import com.sun.source.tree.AssignmentTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCAssign;
 
 import javax.annotation.Nullable;
@@ -59,12 +58,8 @@ public abstract class UAssign extends UExpression implements AssignmentTree {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, Unifier unifier) {
-    if (unifier != null && target instanceof JCAssign) {
-      JCAssign assign = (JCAssign) target;
-      unifier = getVariable().unify(assign.getVariable(), unifier);
-      return getExpression().unify(assign.getExpression(), unifier);
-    }
-    return null;
+  public Unifier visitAssignment(AssignmentTree assign, @Nullable Unifier unifier) {
+    unifier = getVariable().unify(assign.getVariable(), unifier);
+    return getExpression().unify(assign.getExpression(), unifier);
   }
 }

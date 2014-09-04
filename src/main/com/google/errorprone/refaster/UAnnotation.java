@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCAnnotation;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 
@@ -52,13 +51,9 @@ public abstract class UAnnotation extends UExpression implements AnnotationTree 
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCAnnotation) {
-      JCAnnotation annotation = (JCAnnotation) target;
-      unifier = getAnnotationType().unify(annotation.getAnnotationType(), unifier);
-      return Unifier.unifyList(unifier, getArguments(), annotation.getArguments());
-    }
-    return null;
+  public Unifier visitAnnotation(AnnotationTree annotation, @Nullable Unifier unifier) {
+    unifier = getAnnotationType().unify(annotation.getAnnotationType(), unifier);
+    return Unifier.unifyList(unifier, getArguments(), annotation.getArguments());
   }
 
   @Override

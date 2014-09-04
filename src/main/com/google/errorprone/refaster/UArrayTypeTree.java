@@ -20,7 +20,6 @@ import com.google.auto.value.AutoValue;
 
 import com.sun.source.tree.ArrayTypeTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCArrayTypeTree;
 
 import javax.annotation.Nullable;
@@ -42,12 +41,8 @@ public abstract class UArrayTypeTree extends UExpression implements ArrayTypeTre
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCArrayTypeTree) {
-      JCArrayTypeTree tree = (JCArrayTypeTree) target;
-      return getType().unify(tree.getType(), unifier);
-    }
-    return null;
+  public Unifier visitArrayType(ArrayTypeTree tree, @Nullable Unifier unifier) {
+    return getType().unify(tree.getType(), unifier);
   }
 
   @Override

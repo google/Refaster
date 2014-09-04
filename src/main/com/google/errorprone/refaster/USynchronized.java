@@ -20,7 +20,6 @@ import com.google.auto.value.AutoValue;
 
 import com.sun.source.tree.SynchronizedTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCSynchronized;
 
 import javax.annotation.Nullable;
@@ -31,7 +30,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class USynchronized implements UStatement, SynchronizedTree {
+public abstract class USynchronized extends UStatement implements SynchronizedTree {
   public static USynchronized create(UExpression expression, UBlock block) {
     return new AutoValue_USynchronized(expression, block);
   }
@@ -60,13 +59,8 @@ public abstract class USynchronized implements UStatement, SynchronizedTree {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCSynchronized) {
-      JCSynchronized synced = (JCSynchronized) target;
-      unifier = getExpression().unify(synced.getExpression(), unifier);
-      return getBlock().unify(synced.getBlock(), unifier);
-    }
-    return null;
+  public Unifier visitSynchronized(SynchronizedTree synced, @Nullable Unifier unifier) {
+    unifier = getExpression().unify(synced.getExpression(), unifier);
+    return getBlock().unify(synced.getBlock(), unifier);
   }
-
 }

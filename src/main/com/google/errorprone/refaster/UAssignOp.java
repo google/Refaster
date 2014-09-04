@@ -76,16 +76,14 @@ public abstract class UAssignOp extends UExpression implements CompoundAssignmen
     return visitor.visitCompoundAssignment(this, data);
   }
 
+  // TODO(lowasser): consider matching x = x ? y as well as x ?= y
+  
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    // TODO(lowasser): consider matching x = x ? y as well as x ?= y
-    if (unifier != null && target instanceof JCAssignOp) {
-      JCAssignOp assignOp = (JCAssignOp) target;
-      unifier = (getKind() == assignOp.getKind()) ? unifier : null;
-      unifier = getVariable().unify(assignOp.getVariable(), unifier);
-      return getExpression().unify(assignOp.getExpression(), unifier);      
-    }
-    return null;
+  public Unifier visitCompoundAssignment(
+      CompoundAssignmentTree assignOp, @Nullable Unifier unifier) {
+    unifier = (getKind() == assignOp.getKind()) ? unifier : null;
+    unifier = getVariable().unify(assignOp.getVariable(), unifier);
+    return getExpression().unify(assignOp.getExpression(), unifier);      
   }
 }

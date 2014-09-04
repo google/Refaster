@@ -25,8 +25,6 @@ import com.sun.source.tree.TreeVisitor;
 import com.sun.source.tree.UnaryTree;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
-import com.sun.tools.javac.tree.JCTree.JCUnary;
-import com.sun.tools.javac.tree.TreeInfo;
 
 import javax.annotation.Nullable;
 
@@ -63,13 +61,9 @@ public abstract class UUnary extends UExpression implements UnaryTree {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCUnary) {
-      JCUnary unary = (JCUnary) target;
-      unifier = getKind().equals(unary.getKind()) ? unifier : null;
-      return getExpression().unify(TreeInfo.skipParens(unary.getExpression()), unifier);
-    }
-    return null;
+  public Unifier visitUnary(UnaryTree unary, @Nullable Unifier unifier) {
+    unifier = getKind().equals(unary.getKind()) ? unifier : null;
+    return getExpression().unify(UParens.skipParens(unary.getExpression()), unifier);
   }
 
   @Override

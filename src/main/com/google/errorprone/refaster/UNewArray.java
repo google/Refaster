@@ -17,11 +17,12 @@
 package com.google.errorprone.refaster;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import com.sun.source.tree.NewArrayTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCNewArray;
 
@@ -58,25 +59,13 @@ public abstract class UNewArray extends UExpression implements NewArrayTree {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCNewArray) {
-      JCNewArray newArray = (JCNewArray) target;
-      unifier = Unifier.unifyNullable(unifier, getType(), newArray.getType());
-      unifier = Unifier.unifyList(unifier, getDimensions(), newArray.getDimensions());
+  public Unifier visitNewArray(NewArrayTree newArray, @Nullable Unifier unifier) {
+    unifier = Unifier.unifyNullable(unifier, getType(), newArray.getType());
+    unifier = Unifier.unifyList(unifier, getDimensions(), newArray.getDimensions());
 
-      boolean hasRepeated = false;
-      List<UExpression> initializers = getInitializers();
-      if (initializers != null) {
-        for (UExpression initializer : initializers) {
-          if (initializer instanceof URepeated) {
-            hasRepeated = true;
-            break;
-          }
-        }
-      }
-      return Unifier.unifyList(unifier, initializers, newArray.getInitializers(), hasRepeated);
-    }
-    return null;
+    boolean hasRepeated = getInitializers() != null 
+        && Iterables.any(getInitializers(), Predicates.instanceOf(URepeated.class));
+    return Unifier.unifyList(unifier, getInitializers(), newArray.getInitializers(), hasRepeated);
   }
 
   @Override

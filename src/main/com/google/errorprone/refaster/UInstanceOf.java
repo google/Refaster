@@ -20,7 +20,6 @@ import com.google.auto.value.AutoValue;
 
 import com.sun.source.tree.InstanceOfTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCInstanceOf;
 
 import javax.annotation.Nullable;
@@ -59,12 +58,8 @@ public abstract class UInstanceOf extends UExpression implements InstanceOfTree 
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCInstanceOf) {
-      JCInstanceOf instanceOf = (JCInstanceOf) target;
-      unifier = getExpression().unify(instanceOf.getExpression(), unifier);
-      return getType().unify(instanceOf.getType(), unifier);
-    }
-    return null;
+  public Unifier visitInstanceOf(InstanceOfTree instanceOf, @Nullable Unifier unifier) {
+    unifier = getExpression().unify(instanceOf.getExpression(), unifier);
+    return getType().unify(instanceOf.getType(), unifier);
   }
 }

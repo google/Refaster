@@ -33,7 +33,7 @@ import javax.annotation.Nullable;
  *
  * @author Louis Wasserman
  */
-public class UTypeVar implements UType {
+public class UTypeVar extends UType {
   // This can't be @AutoValue'd, since the fields are mutable.
   
   public static final class Key extends Bindings.Key<TypeWithExpression> {
@@ -92,7 +92,7 @@ public class UTypeVar implements UType {
 
   @Override
   @Nullable
-  public Unifier unify(Type target, @Nullable Unifier unifier) {
+  public Unifier visitType(Type target, @Nullable Unifier unifier) {
     // This is only called when we're trying to unify overloads, in which case
     // type variables don't matter.
     return !target.isPrimitive() ? unifier : null;

@@ -17,6 +17,9 @@
 package com.google.errorprone.refaster;
 
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.code.Types;
+
+import javax.annotation.Nullable;
 
 /**
  * A serializable representation of a type template, used for enforcing type constraints on target
@@ -24,5 +27,18 @@ import com.sun.tools.javac.code.Type;
  *
  * @author Louis Wasserman
  */
-public interface UType extends Unifiable<Type>, Inlineable<Type> {
+public abstract class UType extends Types.SimpleVisitor<Unifier, Unifier> 
+    implements Unifiable<Type>, Inlineable<Type> {
+
+  @Override
+  @Nullable
+  public Unifier visitType(Type t, @Nullable Unifier unifier) {
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public final Unifier unify(Type target, @Nullable Unifier unifier) {
+    return (unifier != null && target != null) ? target.accept(this, unifier) : null;
+  }
 }

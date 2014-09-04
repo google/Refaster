@@ -20,7 +20,6 @@ import com.google.auto.value.AutoValue;
 
 import com.sun.source.tree.ExpressionStatementTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
 
 import javax.annotation.Nullable;
@@ -31,7 +30,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UExpressionStatement implements UStatement, ExpressionStatementTree {
+public abstract class UExpressionStatement extends UStatement implements ExpressionStatementTree {
   public static UExpressionStatement create(UExpression expression) {
     return new AutoValue_UExpressionStatement(expression);
   }
@@ -41,12 +40,9 @@ public abstract class UExpressionStatement implements UStatement, ExpressionStat
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCExpressionStatement) {
-      JCExpressionStatement expressionStatement = (JCExpressionStatement) target;
-      return getExpression().unify(expressionStatement.getExpression(), unifier);
-    }
-    return null;
+  public Unifier visitExpressionStatement(
+      ExpressionStatementTree expressionStatement, @Nullable Unifier unifier) {
+    return getExpression().unify(expressionStatement.getExpression(), unifier);
   }
 
   @Override

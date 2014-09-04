@@ -33,7 +33,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UForAll implements UType {
+public abstract class UForAll extends UType {
   public static UForAll create(List<UTypeVar> typeVars, UType quantifiedType) {
     return new AutoValue_UForAll(ImmutableList.copyOf(typeVars), quantifiedType);
   }
@@ -44,17 +44,15 @@ public abstract class UForAll implements UType {
 
   @Override
   @Nullable
-  public Unifier unify(Type target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof ForAll) {
-      Types types = unifier.types();
-      try {
-        Type myType = inline(new Inliner(unifier.getContext(), Bindings.create()));
-        if (types.overrideEquivalent(types.erasure(myType), types.erasure(target))) {
-          return unifier;
-        }
-      } catch (CouldNotResolveImportException e) {
-        return null;
+  public Unifier visitForAll(ForAll target, @Nullable Unifier unifier) {
+    Types types = unifier.types();
+    try {
+      Type myType = inline(new Inliner(unifier.getContext(), Bindings.create()));
+      if (types.overrideEquivalent(types.erasure(myType), types.erasure(target))) {
+        return unifier;
       }
+    } catch (CouldNotResolveImportException e) {
+      // fall through
     }
     return null;
   }

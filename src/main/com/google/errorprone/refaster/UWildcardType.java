@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UWildcardType implements UType {
+public abstract class UWildcardType extends UType {
   public static UWildcardType create(BoundKind boundKind, UType bound) {
     return new AutoValue_UWildcardType(boundKind, bound);
   }
@@ -48,13 +48,9 @@ public abstract class UWildcardType implements UType {
 
   @Override
   @Nullable
-  public Unifier unify(Type target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof WildcardType) {
-      WildcardType wildcard = (WildcardType) target;
-      unifier = boundKind().equals(wildcard.kind) ? unifier : null;
-      return bound().unify(wildcard.type, unifier);
-    }
-    return null;
+  public Unifier visitWildcardType(WildcardType wildcard, @Nullable Unifier unifier) {
+    unifier = boundKind().equals(wildcard.kind) ? unifier : null;
+    return bound().unify(wildcard.type, unifier);
   }
 
   @Override

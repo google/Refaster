@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 
 import com.sun.source.tree.ParameterizedTypeTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCTypeApply;
 
@@ -57,13 +56,10 @@ public abstract class UTypeApply extends UExpression implements ParameterizedTyp
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCTypeApply) {
-      JCTypeApply typeApply = (JCTypeApply) target;
-      unifier = getType().unify(typeApply.getType(), unifier);
-      return Unifier.unifyList(unifier, getTypeArguments(), typeApply.getTypeArguments());
-    }
-    return null;
+  public Unifier visitParameterizedType(
+      ParameterizedTypeTree typeApply, @Nullable Unifier unifier) {
+    unifier = getType().unify(typeApply.getType(), unifier);
+    return Unifier.unifyList(unifier, getTypeArguments(), typeApply.getTypeArguments());
   }
 
   @Override

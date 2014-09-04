@@ -34,7 +34,7 @@ import javax.lang.model.type.TypeKind;
  * @author Louis Wasserman
  */
 @AutoValue
-public abstract class UPrimitiveType implements UType {
+public abstract class UPrimitiveType extends UType {
 
   public static UPrimitiveType create(TypeKind typeKind) {
     checkArgument(isDeFactoPrimitive(typeKind), 
@@ -64,7 +64,7 @@ public abstract class UPrimitiveType implements UType {
 
   @Override
   @Nullable
-  public Unifier unify(Type target, @Nullable Unifier unifier) {
+  public Unifier visitType(Type target, @Nullable Unifier unifier) {
     return getKind().equals(target.getKind()) ? unifier : null;
   }
   

@@ -20,7 +20,6 @@ import com.google.auto.value.AutoValue;
 
 import com.sun.source.tree.DoWhileLoopTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCDoWhileLoop;
 
 import javax.annotation.Nullable;
@@ -31,7 +30,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UDoWhileLoop implements UStatement, DoWhileLoopTree {
+public abstract class UDoWhileLoop extends UStatement implements DoWhileLoopTree {
   public static UDoWhileLoop create(UStatement body, UExpression condition) {
     return new AutoValue_UDoWhileLoop(body, condition);
   }
@@ -44,13 +43,9 @@ public abstract class UDoWhileLoop implements UStatement, DoWhileLoopTree {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, @Nullable Unifier unifier) {
-    if (unifier != null && target instanceof JCDoWhileLoop) {
-      JCDoWhileLoop loop = (JCDoWhileLoop) target;
-      unifier = getStatement().unify(loop.getStatement(), unifier);
-      return getCondition().unify(loop.getCondition(), unifier);
-    }
-    return null;
+  public Unifier visitDoWhileLoop(DoWhileLoopTree loop, @Nullable Unifier unifier) {
+    unifier = getStatement().unify(loop.getStatement(), unifier);
+    return getCondition().unify(loop.getCondition(), unifier);
   }
 
   @Override

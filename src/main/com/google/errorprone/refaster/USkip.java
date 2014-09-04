@@ -18,7 +18,6 @@ package com.google.errorprone.refaster;
 
 import com.sun.source.tree.EmptyStatementTree;
 import com.sun.source.tree.TreeVisitor;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCSkip;
 
 import javax.annotation.Nullable;
@@ -28,8 +27,14 @@ import javax.annotation.Nullable;
  *
  * @author lowasser@google.com (Louis Wasserman)
  */
-public enum USkip implements UStatement, EmptyStatementTree {
-  INSTANCE;
+public final class USkip extends UStatement implements EmptyStatementTree {
+  public static final USkip INSTANCE = new USkip();
+  
+  private USkip() {}
+  
+  Object readResolve() {
+    return INSTANCE;
+  }
 
   @Override
   public JCSkip inline(Inliner inliner) {
@@ -48,8 +53,8 @@ public enum USkip implements UStatement, EmptyStatementTree {
 
   @Override
   @Nullable
-  public Unifier unify(JCTree target, Unifier unifier) {
-    return (target instanceof JCSkip) ? unifier : null;
+  public Unifier visitEmptyStatement(EmptyStatementTree node, @Nullable Unifier unifier) {
+    return unifier;
   }
 
   @Override
