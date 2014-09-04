@@ -18,10 +18,13 @@ package com.google.errorprone.refaster;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.auto.value.AutoValue;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Type.TypeVar;
+import com.sun.tools.javac.tree.JCTree.JCExpression;
 
 import javax.annotation.Nullable;
 
@@ -33,9 +36,35 @@ import javax.annotation.Nullable;
 public class UTypeVar implements UType {
   // This can't be @AutoValue'd, since the fields are mutable.
   
-  public static final class Key extends Bindings.Key<Type> {
+  public static final class Key extends Bindings.Key<TypeWithExpression> {
     public Key(String name) {
       super(name);
+    }
+  }
+  
+  @AutoValue
+  public abstract static class TypeWithExpression implements Inlineable<JCExpression> {
+    public static TypeWithExpression create(Type type, JCExpression expression) {
+      return new AutoValue_UTypeVar_TypeWithExpression(type, checkNotNull(expression));
+    }
+    
+    public static TypeWithExpression create(Type type) {
+      return new AutoValue_UTypeVar_TypeWithExpression(type, null);
+    }
+    
+    public abstract Type type();
+    @Nullable abstract JCExpression expression();
+
+    @Override
+    public JCExpression inline(Inliner inliner) {
+      return (expression() == null)
+          ? inliner.inlineAsTree(type())
+          : expression(); 
+    }
+
+    @Override
+    public String toString() {
+      return type().toString();
     }
   }
   
@@ -124,7 +153,7 @@ public class UTypeVar implements UType {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
         .add("name", name)
         .toString();
   }

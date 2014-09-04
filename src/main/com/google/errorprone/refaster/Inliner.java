@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.errorprone.refaster.Bindings.Key;
+import com.google.errorprone.refaster.UTypeVar.TypeWithExpression;
 
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
@@ -224,9 +225,9 @@ public final class Inliner {
   }
   
   Type inlineTypeVar(UTypeVar var) throws CouldNotResolveImportException {
-    Optional<Type> typeVarBinding = getOptionalBinding(var.key());
+    Optional<TypeWithExpression> typeVarBinding = getOptionalBinding(var.key());
     if (typeVarBinding.isPresent()) {
-      return typeVarBinding.get();
+      return typeVarBinding.get().type();
     } else {
       return inlineAsVar(var);
     }

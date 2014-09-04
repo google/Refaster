@@ -17,6 +17,7 @@
 package com.google.errorprone.refaster;
 
 import com.google.auto.value.AutoValue;
+import com.google.errorprone.refaster.UTypeVar.TypeWithExpression;
 
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.tree.JCTree;
@@ -45,7 +46,7 @@ public abstract class UTypeVarIdent extends UIdent {
 
   @Override
   public JCExpression inline(Inliner inliner) {
-    return inliner.inlineAsTree(inliner.getBinding(key()));
+    return inliner.getBinding(key()).inline(inliner);
   }
 
   @Override
@@ -54,11 +55,11 @@ public abstract class UTypeVarIdent extends UIdent {
     if (unifier != null) {
       Type targetType = target.type;
       @Nullable
-      Type boundType = unifier.getBinding(key());
+      TypeWithExpression boundType = unifier.getBinding(key());
       if (boundType == null) {
-        unifier.putBinding(key(), targetType);
+        unifier.putBinding(key(), TypeWithExpression.create(targetType, (JCExpression) target));
         return unifier;
-      } else if (unifier.types().isSameType(targetType, boundType)) {
+      } else if (unifier.types().isSameType(targetType, boundType.type())) {
         return unifier;
       }
     }

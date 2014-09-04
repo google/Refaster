@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.testing.EqualsTester;
 import com.google.common.testing.SerializableTester;
+import com.google.errorprone.refaster.UTypeVar.TypeWithExpression;
 
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Type;
@@ -56,8 +57,8 @@ public class UTypeVarIdentTest extends AbstractUTreeTest {
     ImportPolicy.bind(context, ImportPolicy.IMPORT_TOP_LEVEL);
     Symtab symtab = Symtab.instance(context);
     Type listType = symtab.listType;
-    bind(new UTypeVar.Key("E"), new ClassType(
-    listType, List.<Type>of(symtab.stringType), listType.tsym));
+    bind(new UTypeVar.Key("E"), TypeWithExpression.create(new ClassType(
+        listType, List.<Type>of(symtab.stringType), listType.tsym)));
     assertInlines("List<String>", UTypeVarIdent.create("E"));
     assertEquals(ImmutableSet.of("java.util.List"), inliner.getImportsToAdd());
   }
