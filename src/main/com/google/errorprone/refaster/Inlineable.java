@@ -22,6 +22,6 @@ package com.google.errorprone.refaster;
  * @param <T> The type that this inlines to.
  * @author Louis Wasserman
  */
-public interface Inlineable<T> {
+interface Inlineable<T> {
   T inline(Inliner inliner) throws CouldNotResolveImportException;
 }

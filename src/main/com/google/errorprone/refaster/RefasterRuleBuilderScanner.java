@@ -56,7 +56,7 @@ public final class RefasterRuleBuilderScanner extends SimpleTreeVisitor<Void, Vo
     this.afterTemplate = null;
   }
   
-  public static Collection<? extends RefasterRule<?, ?>> extractRules(ClassTree tree,
+  public static Collection<? extends CodeTransformer> extractRules(ClassTree tree,
       Context context) {
     ClassSymbol sym = ASTHelpers.getSymbol(tree);
     
@@ -90,7 +90,7 @@ public final class RefasterRuleBuilderScanner extends SimpleTreeVisitor<Void, Vo
     }
   }
 
-  private Collection<? extends RefasterRule<?, ?>> createMatchers(
+  private Collection<? extends CodeTransformer> createMatchers(
       String qualifiedTemplateClass, ImmutableClassToInstanceMap<Annotation> annotationMap) {
     if (beforeTemplates.isEmpty() && afterTemplate == null) {
       // there's no template here

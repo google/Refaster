@@ -34,7 +34,7 @@ import java.util.List;
  * 
  * @author lowasser@google.com (Louis Wasserman)
  */
-public class BlockTemplateMatch extends TemplateMatch {
+class BlockTemplateMatch extends TemplateMatch {
   private final List<JCStatement> statements;
 
   public BlockTemplateMatch(JCBlock block, Unifier unifier, int start, int end) {

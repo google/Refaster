@@ -86,6 +86,8 @@ public abstract class RefasterRule<M extends TemplateMatch, T extends Template<M
   abstract String qualifiedTemplateClass();
   abstract ImmutableList<T> beforeTemplates();
   @Nullable abstract T afterTemplate();
+  
+  @Override
   public abstract ImmutableClassToInstanceMap<Annotation> annotations();
   
   @Override
@@ -94,7 +96,7 @@ public abstract class RefasterRule<M extends TemplateMatch, T extends Template<M
         prepareContext(context, (JCCompilationUnit) tree));
   }
 
-  public ImportPolicy importPolicy() {
+  private ImportPolicy importPolicy() {
     if (afterTemplate() != null) {
       UseImportPolicy importPolicy = afterTemplate().annotations()
           .getInstance(UseImportPolicy.class);
@@ -109,7 +111,7 @@ public abstract class RefasterRule<M extends TemplateMatch, T extends Template<M
     return true; // TODO(lowasser): worth making configurable?
   }
   
-  public Context prepareContext(Context baseContext, JCCompilationUnit compilationUnit) {
+  private Context prepareContext(Context baseContext, JCCompilationUnit compilationUnit) {
     Context context = new SubContext(baseContext);
     if (context.get(JavaFileManager.class) == null) {
       JavacFileManager.preRegister(context);
