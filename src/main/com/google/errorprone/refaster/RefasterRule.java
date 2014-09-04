@@ -24,8 +24,10 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableClassToInstanceMap;
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.DescriptionListener;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
 
+import com.sun.source.tree.CompilationUnitTree;
 import com.sun.tools.javac.code.Symbol.PackageSymbol;
 import com.sun.tools.javac.file.JavacFileManager;
 import com.sun.tools.javac.tree.JCTree.JCCompilationUnit;
@@ -49,7 +51,7 @@ import javax.tools.JavaFileManager;
  */
 @AutoValue
 public abstract class RefasterRule<M extends TemplateMatch, T extends Template<M>> 
-    implements Serializable {
+    implements CodeTransformer, Serializable {
   public static RefasterRule<?, ?> create(String qualifiedTemplateClass,
       Collection<? extends Template<?>> beforeTemplates, @Nullable Template<?> afterTemplate) {
     return create(qualifiedTemplateClass, beforeTemplates, afterTemplate, 
@@ -86,6 +88,12 @@ public abstract class RefasterRule<M extends TemplateMatch, T extends Template<M
   @Nullable abstract T afterTemplate();
   public abstract ImmutableClassToInstanceMap<Annotation> annotations();
   
+  @Override
+  public void apply(CompilationUnitTree tree, Context context, DescriptionListener listener) {
+    RefasterScanner.create(this, listener).scan(tree,
+        prepareContext(context, (JCCompilationUnit) tree));
+  }
+
   public ImportPolicy importPolicy() {
     if (afterTemplate() != null) {
       UseImportPolicy importPolicy = afterTemplate().annotations()

@@ -44,9 +44,9 @@ import com.sun.tools.javac.util.Context;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class RefasterScanner<M extends TemplateMatch, T extends Template<M>> 
+abstract class RefasterScanner<M extends TemplateMatch, T extends Template<M>> 
     extends TreeScanner<Void, Context> {
-  public static <M extends TemplateMatch, T extends Template<M>> RefasterScanner<M, T> create(
+  static <M extends TemplateMatch, T extends Template<M>> RefasterScanner<M, T> create(
       RefasterRule<M, T> rule, DescriptionListener listener) {
     return new AutoValue_RefasterScanner<>(rule, listener);
   }
