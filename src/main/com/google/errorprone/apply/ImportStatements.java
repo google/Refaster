@@ -23,7 +23,9 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.errorprone.ErrorProneEndPosMap;
+import com.google.errorprone.JDKCompatible;
 
+import com.sun.tools.javac.tree.JCTree.JCCompilationUnit;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCImport;
 
@@ -68,6 +70,11 @@ public class ImportStatements {
    */
   private static final Pattern TOPLEVEL_PATTERN = 
       Pattern.compile("import\\s+(static\\s+|)([^.]+).");
+  
+  public static ImportStatements create(JCCompilationUnit compilationUnit) {
+    return new ImportStatements(compilationUnit.getPackageName(),
+        compilationUnit.getImports(), JDKCompatible.getEndPosMap(compilationUnit));
+  }
   
   public ImportStatements(JCExpression packageTree, List<JCImport> importTrees,
       ErrorProneEndPosMap endPosMap) {

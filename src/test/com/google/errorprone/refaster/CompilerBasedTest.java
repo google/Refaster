@@ -18,9 +18,11 @@ package com.google.errorprone.refaster;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
+import com.google.errorprone.apply.SourceFile;
 import com.google.testing.compile.JavaFileObjects;
 
 import com.sun.source.tree.CompilationUnitTree;
@@ -47,6 +49,7 @@ import javax.tools.StandardJavaFileManager;
  */
 public class CompilerBasedTest {
   protected Context context;
+  protected SourceFile sourceFile;
   protected Iterable<JCCompilationUnit> compilationUnits;
   private Map<String, JCMethodDecl> methods;
   
@@ -56,6 +59,7 @@ public class CompilerBasedTest {
         new DiagnosticCollector<JavaFileObject>();
     StandardJavaFileManager fileManager = 
         compiler.getStandardFileManager(diagnosticsCollector, Locale.ENGLISH, UTF_8);
+    this.sourceFile = new SourceFile("CompilerBasedTestInput.java", Joiner.on('\n').join(lines));
     JavacTaskImpl task = (JavacTaskImpl) compiler.getTask(CharStreams.nullWriter(), 
         fileManager,
         diagnosticsCollector,
