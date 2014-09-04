@@ -16,10 +16,10 @@
 
 package com.google.errorprone.refaster;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableClassToInstanceMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -35,11 +35,45 @@ import com.google.errorprone.refaster.annotation.OfKind;
 import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.util.ASTHelpers;
 
+import com.sun.source.tree.AnnotationTree;
+import com.sun.source.tree.ArrayAccessTree;
+import com.sun.source.tree.ArrayTypeTree;
+import com.sun.source.tree.AssignmentTree;
+import com.sun.source.tree.BinaryTree;
+import com.sun.source.tree.BlockTree;
+import com.sun.source.tree.ClassTree;
+import com.sun.source.tree.CompoundAssignmentTree;
+import com.sun.source.tree.ConditionalExpressionTree;
+import com.sun.source.tree.DoWhileLoopTree;
+import com.sun.source.tree.EmptyStatementTree;
+import com.sun.source.tree.EnhancedForLoopTree;
+import com.sun.source.tree.ExpressionStatementTree;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.ForLoopTree;
+import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.IfTree;
+import com.sun.source.tree.InstanceOfTree;
+import com.sun.source.tree.LiteralTree;
+import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.ModifiersTree;
+import com.sun.source.tree.NewArrayTree;
+import com.sun.source.tree.NewClassTree;
+import com.sun.source.tree.ParameterizedTypeTree;
+import com.sun.source.tree.ParenthesizedTree;
+import com.sun.source.tree.PrimitiveTypeTree;
+import com.sun.source.tree.ReturnTree;
 import com.sun.source.tree.StatementTree;
+import com.sun.source.tree.SynchronizedTree;
+import com.sun.source.tree.ThrowTree;
+import com.sun.source.tree.Tree;
 import com.sun.source.tree.Tree.Kind;
+import com.sun.source.tree.TypeCastTree;
+import com.sun.source.tree.UnaryTree;
 import com.sun.source.tree.VariableTree;
+import com.sun.source.tree.WhileLoopTree;
+import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.tools.javac.code.Attribute.Compound;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
@@ -53,50 +87,17 @@ import com.sun.tools.javac.code.Type.ForAll;
 import com.sun.tools.javac.code.Type.MethodType;
 import com.sun.tools.javac.code.Type.TypeVar;
 import com.sun.tools.javac.code.Type.WildcardType;
+import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.model.AnnotationProxyMaker;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.tree.JCTree.JCAnnotation;
-import com.sun.tools.javac.tree.JCTree.JCArrayAccess;
-import com.sun.tools.javac.tree.JCTree.JCArrayTypeTree;
-import com.sun.tools.javac.tree.JCTree.JCAssign;
-import com.sun.tools.javac.tree.JCTree.JCAssignOp;
-import com.sun.tools.javac.tree.JCTree.JCBinary;
-import com.sun.tools.javac.tree.JCTree.JCBlock;
-import com.sun.tools.javac.tree.JCTree.JCClassDecl;
-import com.sun.tools.javac.tree.JCTree.JCConditional;
-import com.sun.tools.javac.tree.JCTree.JCDoWhileLoop;
-import com.sun.tools.javac.tree.JCTree.JCEnhancedForLoop;
-import com.sun.tools.javac.tree.JCTree.JCExpression;
-import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
-import com.sun.tools.javac.tree.JCTree.JCFieldAccess;
-import com.sun.tools.javac.tree.JCTree.JCForLoop;
-import com.sun.tools.javac.tree.JCTree.JCIdent;
-import com.sun.tools.javac.tree.JCTree.JCIf;
-import com.sun.tools.javac.tree.JCTree.JCInstanceOf;
-import com.sun.tools.javac.tree.JCTree.JCLiteral;
-import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
-import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
 import com.sun.tools.javac.tree.JCTree.JCModifiers;
-import com.sun.tools.javac.tree.JCTree.JCNewArray;
-import com.sun.tools.javac.tree.JCTree.JCNewClass;
-import com.sun.tools.javac.tree.JCTree.JCParens;
-import com.sun.tools.javac.tree.JCTree.JCPrimitiveTypeTree;
-import com.sun.tools.javac.tree.JCTree.JCReturn;
-import com.sun.tools.javac.tree.JCTree.JCSkip;
-import com.sun.tools.javac.tree.JCTree.JCStatement;
-import com.sun.tools.javac.tree.JCTree.JCSynchronized;
-import com.sun.tools.javac.tree.JCTree.JCThrow;
-import com.sun.tools.javac.tree.JCTree.JCTypeApply;
-import com.sun.tools.javac.tree.JCTree.JCTypeCast;
-import com.sun.tools.javac.tree.JCTree.JCUnary;
-import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
-import com.sun.tools.javac.tree.JCTree.JCWhileLoop;
 import com.sun.tools.javac.util.Context;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -112,13 +113,13 @@ import javax.lang.model.type.MirroredTypeException;
  *
  * @author lowasser@google.com (Louis Wasserman)
  */
-public class UTemplater {
+public class UTemplater extends SimpleTreeVisitor<UTree<?>, Void> {
   /**
    * Context key to indicate that templates should be treated as BlockTemplates, regardless
    * of their structure.
    */
   public static final Context.Key<Boolean> REQUIRE_BLOCK_KEY = new Context.Key<>();
-  
+
   /**
    * Returns a template based on a method. One-line methods starting with a {@code return} statement
    * are guessed to be expression templates, and all other methods are guessed to be block
@@ -160,15 +161,15 @@ public class UTemplater {
     if (bodyStatements.size() == 1
         && Iterables.getOnlyElement(bodyStatements).getKind() == Kind.RETURN
         && context.get(REQUIRE_BLOCK_KEY) == null) {
-      JCExpression expression =
-          ((JCReturn) Iterables.getOnlyElement(bodyStatements)).getExpression();
+      ExpressionTree expression =
+          ((ReturnTree) Iterables.getOnlyElement(bodyStatements)).getExpression();
       return ExpressionTemplate.create(
           annotations, typeParameters, expressionVarTypes,
           templater.template(expression), methodType.getReturnType());
     } else {
       List<UStatement> templateStatements = new ArrayList<>();
       for (StatementTree statement : bodyStatements) {
-        templateStatements.add(templater.template((JCStatement) statement));
+        templateStatements.add(templater.template(statement));
       }
       return BlockTemplate.create(annotations, 
           typeParameters, expressionVarTypes, templateStatements);
@@ -185,12 +186,10 @@ public class UTemplater {
   }
 
   private final ImmutableMap<String, VarSymbol> freeVariables;
-  private final Map<TypeSymbol, UTypeVar> typeVariables;
   private final Context context;
 
   public UTemplater(Map<String, VarSymbol> freeVariables, Context context) {
     this.freeVariables = ImmutableMap.copyOf(freeVariables);
-    this.typeVariables = Maps.newHashMap();
     this.context = context;
   }
 
@@ -198,145 +197,124 @@ public class UTemplater {
     this(ImmutableMap.<String, VarSymbol>of(), context);
   }
 
-  public UTree<?> template(JCTree tree) {
-    if (tree instanceof JCExpression) {
-      return template((JCExpression) tree);
-    } else if (tree instanceof JCStatement) {
-      return template((JCStatement) tree);
-    } else if (tree instanceof JCMethodDecl) {
-      return template((JCMethodDecl) tree);
-    } else if (tree instanceof JCModifiers) {
-      return template((JCModifiers) tree);
-    } else {
-      throw new IllegalArgumentException(
-          "Refaster does not currently support syntax " + tree.getClass());
+  public UTree<?> template(Tree tree) {
+    return tree.accept(this, null);
+  }
+  
+  private static <T> ImmutableList<T> cast(Iterable<?> elements, Class<T> clazz) {
+    ImmutableList.Builder<T> builder = ImmutableList.builder();
+    for (Object element : elements) {
+      builder.add(clazz.cast(element));
     }
-  }
-  
-  private UMethodDecl template(JCMethodDecl decl) {
-    return UMethodDecl.create(
-        template(decl.getModifiers()),
-        decl.getName().toString(),
-        template((JCExpression) decl.getReturnType()),
-        Iterables.filter(templateStatements(decl.getParameters()), UVariableDecl.class),
-        templateExpressions(decl.getThrows()),
-        template(decl.getBody()));
-  }
-  
-  private UModifiers template(JCModifiers modifiers) {
-    return UModifiers.create(modifiers.flags,
-        Iterables.filter(templateExpressions(modifiers.getAnnotations()), UAnnotation.class));
+    return builder.build();
   }
 
-  public UExpression template(JCExpression tree) {
-    if (tree instanceof JCArrayTypeTree) {
-      return template((JCArrayTypeTree) tree);
-    } else if (tree instanceof JCTypeApply) {
-      return template((JCTypeApply) tree);
-    } else if (tree instanceof JCPrimitiveTypeTree) {
-      return template((JCPrimitiveTypeTree) tree);
-    } else if (tree instanceof JCLiteral) {
-      return template((JCLiteral) tree);
-    } else if (tree instanceof JCParens) {
-      return template((JCParens) tree);
-    } else if (tree instanceof JCFieldAccess) {
-      return template((JCFieldAccess) tree);
-    } else if (tree instanceof JCArrayAccess) {
-      return template((JCArrayAccess) tree);
-    } else if (tree instanceof JCAssign) {
-      return template((JCAssign) tree);
-    } else if (tree instanceof JCAnnotation) {
-      return template((JCAnnotation) tree);
-    } else if (tree instanceof JCNewArray) {
-      return template((JCNewArray) tree);
-    } else if (tree instanceof JCNewClass) {
-      return template((JCNewClass) tree);
-    } else if (tree instanceof JCInstanceOf) {
-      return template((JCInstanceOf) tree);
-    } else if (tree instanceof JCIdent) {
-      return template((JCIdent) tree);
-    } else if (tree instanceof JCMethodInvocation) {
-      return template((JCMethodInvocation) tree);
-    } else if (tree instanceof JCBinary) {
-      return template((JCBinary) tree);
-    } else if (tree instanceof JCAssignOp) {
-      return template((JCAssignOp) tree);
-    } else if (tree instanceof JCConditional) {
-      return template((JCConditional) tree);
-    } else if (tree instanceof JCIdent) {
-      return template((JCIdent) tree);
-    } else if (tree instanceof JCUnary) {
-      return template((JCUnary) tree);
-    } else if (tree instanceof JCTypeCast) {
-      return template((JCTypeCast) tree);
-    } else {
-      throw new IllegalArgumentException(
-          "Refaster does not currently support syntax " + tree.getClass());
-    }
+  @Override
+  public UMethodDecl visitMethod(MethodTree decl, Void v) {
+    return UMethodDecl.create(
+        visitModifiers(decl.getModifiers(), null),
+        decl.getName().toString(),
+        templateType(decl.getReturnType()),
+        cast(templateStatements(decl.getParameters()), UVariableDecl.class),
+        templateExpressions(decl.getThrows()),
+        (UBlock) template(decl.getBody()));
+  }
+
+  @Override
+  public UModifiers visitModifiers(ModifiersTree modifiers, Void v) {
+    return UModifiers.create(((JCModifiers) modifiers).flags,
+        cast(templateExpressions(modifiers.getAnnotations()), UAnnotation.class));
+  }
+
+  public UExpression template(ExpressionTree tree) {
+    return (UExpression) tree.accept(this, null);
   }
 
   @Nullable
   private List<UExpression> templateExpressions(
-      @Nullable List<? extends JCExpression> expressions) {
+      @Nullable Iterable<? extends ExpressionTree> expressions) {
     if (expressions == null) {
       return null;
     }
     ImmutableList.Builder<UExpression> builder = ImmutableList.builder();
-    for (JCExpression expression : expressions) {
+    for (ExpressionTree expression : expressions) {
       builder.add(template(expression));
     }
     return builder.build();
   }
 
-  private UInstanceOf template(JCInstanceOf tree) {
+  public UExpression templateType(Tree tree) {
+    checkArgument(tree instanceof ExpressionTree,
+        "Trees representing types are expected to implement ExpressionTree, but %s does not", tree);
+    return template((ExpressionTree) tree);
+  }
+
+  @Nullable
+  private List<UExpression> templateTypeExpressions(@Nullable Iterable<? extends Tree> types) {
+    if (types == null) {
+      return null;
+    }
+    ImmutableList.Builder<UExpression> builder = ImmutableList.builder();
+    for (Tree type : types) {
+      builder.add(templateType(type));
+    }
+    return builder.build();
+  }
+
+  @Override
+  public UInstanceOf visitInstanceOf(InstanceOfTree tree, Void v) {
     return UInstanceOf.create(template(tree.getExpression()), template(tree.getType()));
   }
 
-  private UPrimitiveTypeTree template(JCPrimitiveTypeTree tree) {
+  @Override
+  public UPrimitiveTypeTree visitPrimitiveType(PrimitiveTypeTree tree, Void v) {
     return UPrimitiveTypeTree.create(tree.getPrimitiveTypeKind());
   }
 
-  private ULiteral template(JCLiteral tree) {
+  @Override
+  public ULiteral visitLiteral(LiteralTree tree, Void v) {
     return ULiteral.create(tree.getKind(), tree.getValue());
   }
 
-  private UParens template(JCParens tree) {
+  @Override
+  public UParens visitParenthesized(ParenthesizedTree tree, Void v) {
     return UParens.create(template(tree.getExpression()));
   }
 
-  private UAssign template(JCAssign tree) {
+  @Override
+  public UAssign visitAssignment(AssignmentTree tree, Void v) {
     return UAssign.create(template(tree.getVariable()), template(tree.getExpression()));
   }
 
-  private UArrayAccess template(JCArrayAccess tree) {
+  @Override
+  public UArrayAccess visitArrayAccess(ArrayAccessTree tree, Void v) {
     return UArrayAccess.create(template(tree.getExpression()), template(tree.getIndex()));
   }
 
-  private UAnnotation template(JCAnnotation tree) {
-    return UAnnotation.create(
-        template(tree.getAnnotationType()), templateExpressions(tree.getArguments()));
+  @Override
+  public UAnnotation visitAnnotation(AnnotationTree tree, Void v) {
+    return UAnnotation.create(template(tree.getAnnotationType()),
+        templateExpressions(tree.getArguments()));
   }
 
-  private UExpression template(JCFieldAccess tree) {
-    if (tree.sym instanceof ClassSymbol) {
-      return UClassIdent.create((ClassSymbol) tree.sym);
-    } else if (tree.sym.isStatic()) {
-      JCExpression selected = tree.getExpression();
+  @Override
+  public UExpression visitMemberSelect(MemberSelectTree tree, Void v) {
+    Symbol sym = ASTHelpers.getSymbol(tree);
+    if (sym instanceof ClassSymbol) {
+      return UClassIdent.create((ClassSymbol) sym);
+    } else if (sym.isStatic()) {
+      ExpressionTree selected = tree.getExpression();
       checkState(ASTHelpers.getSymbol(selected) instanceof ClassSymbol,
           "Refaster cannot match static methods used on instances");
-      return staticMember(tree.sym);
+      return staticMember(sym);
     }
-    return UMemberSelect.create(
-        template(tree.getExpression()),
-        tree.getIdentifier().toString(),
-        template(tree.sym.type));
+    return UMemberSelect.create(template(tree.getExpression()),
+        tree.getIdentifier().toString(), template(sym.type));
   }
 
   private UStaticIdent staticMember(Symbol symbol) {
-    return UStaticIdent.create(
-        (ClassSymbol) symbol.getEnclosingElement(),
-        symbol.getSimpleName().toString(),
-        template(symbol.asType()));
+    return UStaticIdent.create((ClassSymbol) symbol.getEnclosingElement(),
+        symbol.getSimpleName().toString(), template(symbol.asType()));
   }
 
   private static final UStaticIdent ANY_OF;
@@ -371,35 +349,7 @@ public class UTemplater {
             UMethodType.create(eVar, UClassType.create(String.class.getCanonicalName()))));
   }
 
-  private UExpression template(JCMethodInvocation tree) {
-    if (ANY_OF.unify(tree.getMethodSelect(), new Unifier(context)) != null) {
-      return UAnyOf.create(templateExpressions(tree.getArguments()));
-    } else if (IS_INSTANCE.unify(tree.getMethodSelect(), new Unifier(context)) != null) {
-      return UInstanceOf.create(
-          template(Iterables.getOnlyElement(tree.getArguments())),
-          template(getSingleExplicitTypeArgument(tree)));
-    } else if (CLAZZ.unify(tree.getMethodSelect(), new Unifier(context)) != null) {
-      JCExpression typeArg = getSingleExplicitTypeArgument(tree);
-      return UMemberSelect.create(template(typeArg), "class",
-          UClassType.create("java.lang.Class", template(typeArg.type)));
-    } else if (NEW_ARRAY.unify(tree.getMethodSelect(), new Unifier(context)) != null) {
-      JCExpression typeArg = getSingleExplicitTypeArgument(tree);
-      JCExpression lengthArg = Iterables.getOnlyElement(tree.getArguments());
-      return UNewArray.create(template(typeArg), ImmutableList.of(template(lengthArg)), null);
-    } else if (ENUM_VALUE_OF.unify(tree.getMethodSelect(), new Unifier(context)) != null) {
-      JCExpression typeArg = getSingleExplicitTypeArgument(tree);
-      JCExpression strArg = Iterables.getOnlyElement(tree.getArguments());
-      return UMethodInvocation.create(
-          UMemberSelect.create(template(typeArg), "valueOf", UMethodType.create(
-              template(typeArg.type), UClassType.create("java.lang.String"))),
-          template(strArg));
-    } else {
-      return UMethodInvocation.create(
-          template(tree.getMethodSelect()), templateExpressions(tree.getArguments()));
-    }
-  }
-
-  private static JCExpression getSingleExplicitTypeArgument(JCMethodInvocation tree) {
+  private static Tree getSingleExplicitTypeArgument(MethodInvocationTree tree) {
     if (tree.getTypeArguments().isEmpty()) {
       throw new IllegalArgumentException("Methods in the Refaster class must be invoked with "
           + "an explicit type parameter; for example, 'Refaster.<T>isInstance(o)'.");
@@ -407,25 +357,54 @@ public class UTemplater {
     return Iterables.getOnlyElement(tree.getTypeArguments());
   }
 
-  private UBinary template(JCBinary tree) {
-    return UBinary.create(
-        tree.getKind(), template(tree.getLeftOperand()), template(tree.getRightOperand()));
+  @Override
+  public UExpression visitMethodInvocation(MethodInvocationTree tree, Void v) {
+    if (ANY_OF.unify(tree.getMethodSelect(), new Unifier(context)) != null) {
+      return UAnyOf.create(templateExpressions(tree.getArguments()));
+    } else if (IS_INSTANCE.unify(tree.getMethodSelect(), new Unifier(context)) != null) {
+      return UInstanceOf.create(template(Iterables.getOnlyElement(tree.getArguments())),
+          template(getSingleExplicitTypeArgument(tree)));
+    } else if (CLAZZ.unify(tree.getMethodSelect(), new Unifier(context)) != null) {
+      Tree typeArg = getSingleExplicitTypeArgument(tree);
+      return UMemberSelect.create(templateType(typeArg), "class",
+          UClassType.create("java.lang.Class", template(((JCTree) typeArg).type)));
+    } else if (NEW_ARRAY.unify(tree.getMethodSelect(), new Unifier(context)) != null) {
+      Tree typeArg = getSingleExplicitTypeArgument(tree);
+      ExpressionTree lengthArg = Iterables.getOnlyElement(tree.getArguments());
+      return UNewArray.create(templateType(typeArg), ImmutableList.of(template(lengthArg)), null);
+    } else if (ENUM_VALUE_OF.unify(tree.getMethodSelect(), new Unifier(context)) != null) {
+      Tree typeArg = getSingleExplicitTypeArgument(tree);
+      ExpressionTree strArg = Iterables.getOnlyElement(tree.getArguments());
+      return UMethodInvocation.create(UMemberSelect.create(templateType(typeArg),
+          "valueOf", UMethodType.create(template(((JCTree) typeArg).type),
+              UClassType.create("java.lang.String"))), template(strArg));
+    } else {
+      return UMethodInvocation.create(template(tree.getMethodSelect()),
+          templateExpressions(tree.getArguments()));
+    }
   }
 
-  private UAssignOp template(JCAssignOp tree) {
-    return UAssignOp.create(
-        template(tree.getVariable()), tree.getKind(), template(tree.getExpression()));
+  @Override
+  public UBinary visitBinary(BinaryTree tree, Void v) {
+    return UBinary.create(tree.getKind(), template(tree.getLeftOperand()),
+        template(tree.getRightOperand()));
   }
 
-  private UUnary template(JCUnary tree) {
+  @Override
+  public UAssignOp visitCompoundAssignment(CompoundAssignmentTree tree, Void v) {
+    return UAssignOp.create(template(tree.getVariable()), tree.getKind(),
+        template(tree.getExpression()));
+  }
+
+  @Override
+  public UUnary visitUnary(UnaryTree tree, Void v) {
     return UUnary.create(tree.getKind(), template(tree.getExpression()));
   }
 
-  private UExpression template(JCConditional tree) {
-    UConditional result = UConditional.create(
-        template(tree.getCondition()),
-        template(tree.getTrueExpression()),
-        template(tree.getFalseExpression()));
+  @Override
+  public UExpression visitConditionalExpression(ConditionalExpressionTree tree, Void v) {
+    UConditional result = UConditional.create(template(tree.getCondition()),
+        template(tree.getTrueExpression()), template(tree.getFalseExpression()));
     if (context.get(AlsoReverseTernary.class) != null) {
       return UAnyOf.create(result, result.reverse());
     } else {
@@ -433,52 +412,61 @@ public class UTemplater {
     }
   }
 
-  private UNewArray template(JCNewArray tree) {
-    return UNewArray.create(
-        template(tree.getType()),
+  @Override
+  public UNewArray visitNewArray(NewArrayTree tree, Void v) {
+    return UNewArray.create((UExpression) template(tree.getType()),
         templateExpressions(tree.getDimensions()),
         templateExpressions(tree.getInitializers()));
   }
 
-  private UNewClass template(JCNewClass tree) {
+  @Override
+  public UNewClass visitNewClass(NewClassTree tree, Void v) {
     return UNewClass.create(
         tree.getEnclosingExpression() == null ? null : template(tree.getEnclosingExpression()),
-        templateExpressions(tree.getTypeArguments()),
-        template(tree.getIdentifier()),
+        templateTypeExpressions(tree.getTypeArguments()),
+        template(tree.getIdentifier()), 
         templateExpressions(tree.getArguments()),
-        (tree.getClassBody() == null) ? null : template(tree.getClassBody()));
+        (tree.getClassBody() == null) ? null : visitClass(tree.getClassBody(), null));
   }
-  
-  private UClassDecl template(JCClassDecl tree) {
+
+  @Override
+  public UClassDecl visitClass(ClassTree tree, Void v) {
     ImmutableList.Builder<UMethodDecl> decls = ImmutableList.builder();
-    for (JCMethodDecl decl : Iterables.filter(tree.getMembers(), JCMethodDecl.class)) {
+    for (MethodTree decl : Iterables.filter(tree.getMembers(), MethodTree.class)) {
       if (decl.getReturnType() != null) {
-        decls.add(template(decl));
+        decls.add(visitMethod(decl, null));
       }
     }
     return UClassDecl.create(decls.build());
   }
 
-  private UArrayTypeTree template(JCArrayTypeTree tree) {
-    return UArrayTypeTree.create(template(tree.elemtype));
+  @Override
+  public UArrayTypeTree visitArrayType(ArrayTypeTree tree, Void v) {
+    return UArrayTypeTree.create(templateType(tree.getType()));
   }
 
-  private UTypeApply template(JCTypeApply tree) {
-    return UTypeApply.create(template(tree.clazz), templateExpressions(tree.arguments));
+  @Override
+  public UTypeApply visitParameterizedType(ParameterizedTypeTree tree, Void v) {
+    return UTypeApply.create(
+        templateType(tree.getType()),
+        templateTypeExpressions(tree.getTypeArguments()));
   }
 
-  private UTypeCast template(JCTypeCast tree) {
+  @Override
+  public UTypeCast visitTypeCast(TypeCastTree tree, Void v) {
     return UTypeCast.create(template(tree.getType()), template(tree.getExpression()));
   }
 
-  private UExpression template(JCIdent tree) {
-    if (tree.sym instanceof ClassSymbol) {
-      return UClassIdent.create((ClassSymbol) tree.sym);
-    } else if (tree.sym.isStatic()) {
-      return staticMember(tree.sym);
+  @Override
+  public UExpression visitIdentifier(IdentifierTree tree, Void v) {
+    Symbol sym = ASTHelpers.getSymbol(tree);
+    if (sym instanceof ClassSymbol) {
+      return UClassIdent.create((ClassSymbol) sym);
+    } else if (sym.isStatic()) {
+      return staticMember(sym);
     } else if (freeVariables.containsKey(tree.getName().toString())) {
       VarSymbol symbol = freeVariables.get(tree.getName().toString());
-      checkState(symbol == tree.sym);
+      checkState(symbol == sym);
       UExpression ident = UFreeIdent.create(tree.getName().toString());
       Matches matches = ASTHelpers.getAnnotation(symbol, Matches.class);
       if (matches != null) {
@@ -500,7 +488,7 @@ public class UTemplater {
       }
       return ident;
     }
-    switch (tree.sym.getKind()) {
+    switch (sym.getKind()) {
       case TYPE_PARAMETER:
         return UTypeVarIdent.create(tree.getName().toString());
       default:
@@ -563,132 +551,109 @@ public class UTemplater {
     return (Class<? extends T>) klass;
   }
 
-  public UStatement template(JCStatement tree) {
-    if (tree instanceof JCExpressionStatement) {
-      return template((JCExpressionStatement) tree);
-    } else if (tree instanceof JCForLoop) {
-      return template((JCForLoop) tree);
-    } else if (tree instanceof JCReturn) {
-      return template((JCReturn) tree);
-    } else if (tree instanceof JCVariableDecl) {
-      return template((JCVariableDecl) tree);
-    } else if (tree instanceof JCDoWhileLoop) {
-      return template((JCDoWhileLoop) tree);
-    } else if (tree instanceof JCThrow) {
-      return template((JCThrow) tree);
-    } else if (tree instanceof JCBlock) {
-      return template((JCBlock) tree);
-    } else if (tree instanceof JCIf) {
-      return template((JCIf) tree);
-    } else if (tree instanceof JCWhileLoop) {
-      return template((JCWhileLoop) tree);
-    } else if (tree instanceof JCSynchronized) {
-      return template((JCSynchronized) tree);
-    } else if (tree instanceof JCEnhancedForLoop) {
-      return template((JCEnhancedForLoop) tree);
-    } else if (tree instanceof JCSkip) {
-      return template((JCSkip) tree);
-    } else {
-      throw new IllegalArgumentException(
-          "Refaster does not currently support syntax " + tree.getClass());
-    }
+  public UStatement template(StatementTree tree) {
+    return (UStatement) tree.accept(this, null);
   }
 
   @Nullable
-  private List<UStatement> templateStatements(@Nullable List<? extends JCStatement> statements) {
+  private List<UStatement> templateStatements(@Nullable List<? extends StatementTree> statements) {
     if (statements == null) {
       return null;
     }
     ImmutableList.Builder<UStatement> builder = ImmutableList.builder();
-    for (JCStatement statement : statements) {
+    for (StatementTree statement : statements) {
       builder.add(template(statement));
     }
     return builder.build();
   }
-
-  private UExpressionStatement template(JCExpressionStatement tree) {
+  
+  @Override
+  public UExpressionStatement visitExpressionStatement(ExpressionStatementTree tree, Void v) {
     return UExpressionStatement.create(template(tree.getExpression()));
   }
 
-  private UReturn template(JCReturn tree) {
-    return UReturn.create((tree.getExpression() == null) ? null : template(tree.getExpression()));
+  @Override
+  public UReturn visitReturn(ReturnTree tree, Void v) {
+    return UReturn.create(
+        (tree.getExpression() == null) ? null : template(tree.getExpression()));
   }
 
-  private UWhileLoop template(JCWhileLoop tree) {
+  @Override
+  public UWhileLoop visitWhileLoop(WhileLoopTree tree, Void v) {
     return UWhileLoop.create(template(tree.getCondition()), template(tree.getStatement()));
   }
 
-  private UVariableDecl template(JCVariableDecl tree) {
+  @Override
+  public UVariableDecl visitVariable(VariableTree tree, Void v) {
     return UVariableDecl.create(
         tree.getName().toString(),
-        template(tree.vartype),
+        templateType(tree.getType()),
         (tree.getInitializer() == null) ? null : template(tree.getInitializer()));
   }
 
-  private USkip template(JCSkip tree) {
+  @Override
+  public USkip visitEmptyStatement(EmptyStatementTree tree, Void v) {
     return USkip.INSTANCE;
   }
 
-  private UForLoop template(JCForLoop tree) {
+  @Override
+  public UForLoop visitForLoop(ForLoopTree tree, Void v) {
     return UForLoop.create(
         templateStatements(tree.getInitializer()),
         (tree.getCondition() == null) ? null : template(tree.getCondition()),
-        Iterables.filter(templateStatements(tree.getUpdate()), UExpressionStatement.class),
+        cast(templateStatements(tree.getUpdate()), UExpressionStatement.class),
         template(tree.getStatement()));
   }
 
-  private UBlock template(JCBlock tree) {
+  @Override
+  public UBlock visitBlock(BlockTree tree, Void v) {
     return UBlock.create(templateStatements(tree.getStatements()));
   }
 
-  private UThrow template(JCThrow tree) {
+  @Override
+  public UThrow visitThrow(ThrowTree tree, Void v) {
     return UThrow.create(template(tree.getExpression()));
   }
 
-  private UDoWhileLoop template(JCDoWhileLoop tree) {
+  @Override
+  public UDoWhileLoop visitDoWhileLoop(DoWhileLoopTree tree, Void v) {
     return UDoWhileLoop.create(template(tree.getStatement()), template(tree.getCondition()));
   }
 
-  private UEnhancedForLoop template(JCEnhancedForLoop tree) {
+  @Override
+  public UEnhancedForLoop visitEnhancedForLoop(EnhancedForLoopTree tree, Void v) {
     return UEnhancedForLoop.create(
-        template(tree.getVariable()),
-        template(tree.getExpression()),
+        visitVariable(tree.getVariable(), null),
+        template(tree.getExpression()), 
         template(tree.getStatement()));
   }
 
-  private USynchronized template(JCSynchronized tree) {
-    return USynchronized.create(template(tree.getExpression()), template(tree.getBlock()));
+  @Override
+  public USynchronized visitSynchronized(SynchronizedTree tree, Void v) {
+    return USynchronized.create(
+        template(tree.getExpression()),
+        visitBlock(tree.getBlock(), null));
   }
 
-  private UIf template(JCIf tree) {
+  @Override
+  public UIf visitIf(IfTree tree, Void v) {
     return UIf.create(
-        template(tree.getCondition()),
+        template(tree.getCondition()), 
         template(tree.getThenStatement()),
         (tree.getElseStatement() == null) ? null : template(tree.getElseStatement()));
   }
 
-  public UType template(Type type) {
-    if (type instanceof ClassType) {
-      return template((ClassType) type);
-    } else if (type instanceof ArrayType) {
-      return template((ArrayType) type);
-    } else if (type instanceof MethodType) {
-      return template((MethodType) type);
-    } else if (type instanceof WildcardType) {
-      return template((WildcardType) type);
-    } else if (type instanceof TypeVar) {
-      return template((TypeVar) type);
-    } else if (type instanceof ForAll) {
-      return template((ForAll) type);
-    } else if (UPrimitiveType.isDeFactoPrimitive(type.getKind())) {
-      return UPrimitiveType.create(type.getKind());
-    } else {
-      throw new IllegalArgumentException(
-          "Refaster does not currently support syntax " + type.getKind());
-    }
+  @Override
+  protected UTree<?> defaultAction(Tree tree, Void v) {
+    throw new IllegalArgumentException(
+        "Refaster does not currently support syntax " + tree.getClass());
   }
 
-  private List<UType> templateTypes(List<? extends Type> types) {
+  public UType template(Type type) {
+    return type.accept(typeTemplater, null);
+  }
+
+  private List<UType> templateTypes(Iterable<? extends Type> types) {
     ImmutableList.Builder<UType> builder = ImmutableList.builder();
     for (Type ty : types) {
       builder.add(template(ty));
@@ -696,46 +661,64 @@ public class UTemplater {
     return builder.build();
   }
 
-  private UArrayType template(ArrayType type) {
-    return UArrayType.create(template(type.getComponentType()));
-  }
+  private final Type.Visitor<UType, Void> typeTemplater = new Types.SimpleVisitor<UType, Void>() {
+    private final Map<TypeSymbol, UTypeVar> typeVariables = new HashMap<>();
 
-  private UMethodType template(MethodType type) {
-    return UMethodType.create(
-        template(type.getReturnType()), templateTypes(type.getParameterTypes()));
-  }
-
-  private UClassType template(ClassType type) {
-    return UClassType.create(
-        type.tsym.getQualifiedName().toString(), templateTypes(type.getTypeArguments()));
-  }
-
-  private UWildcardType template(WildcardType type) {
-    return UWildcardType.create(type.kind, template(type.type));
-  }
-
-  private UTypeVar template(TypeVar type) {
-    /*
-     * In order to handle recursively bounded type variables without a stack overflow, we first
-     * cache a type var with no bounds, then we template the bounds.
-     */
-    TypeSymbol tsym = type.asElement();
-    if (typeVariables.containsKey(tsym)) {
-      return typeVariables.get(tsym);
+    @Override
+    public UType visitType(Type type, Void v) {
+      if (UPrimitiveType.isDeFactoPrimitive(type.getKind())) {
+        return UPrimitiveType.create(type.getKind());
+      } else {
+        throw new IllegalArgumentException(
+            "Refaster does not currently support syntax " + type.getKind());
+      }
     }
-    UTypeVar var = UTypeVar.create(tsym.getSimpleName().toString());
-    typeVariables.put(tsym, var); // so the type variable can be used recursively in the bounds
-    var.setLowerBound(template(type.getLowerBound()));
-    var.setUpperBound(template(type.getUpperBound()));
-    return var;
-  }
 
-  private UForAll template(ForAll type) {
-    List<UTypeVar> vars = FluentIterable.from(templateTypes(type.getTypeVariables()))
-        .filter(UTypeVar.class)
-        .toList();
-    return UForAll.create(vars, template(type.qtype));
-  }
+    @Override
+    public UArrayType visitArrayType(ArrayType type, Void v) {
+      return UArrayType.create(type.getComponentType().accept(this, null));
+    }
+
+    @Override
+    public UMethodType visitMethodType(MethodType type, Void v) {
+      return UMethodType.create(
+          type.getReturnType().accept(this, null), templateTypes(type.getParameterTypes()));
+    }
+
+    @Override
+    public UClassType visitClassType(ClassType type, Void v) {
+      return UClassType.create(
+          type.tsym.getQualifiedName().toString(), templateTypes(type.getTypeArguments()));
+    }
+
+    @Override
+    public UWildcardType visitWildcardType(WildcardType type, Void v) {
+      return UWildcardType.create(type.kind, type.type.accept(this, null));
+    }
+
+    @Override
+    public UTypeVar visitTypeVar(TypeVar type, Void v) {
+      /*
+       * In order to handle recursively bounded type variables without a stack overflow, we first
+       * cache a type var with no bounds, then we template the bounds.
+       */
+      TypeSymbol tsym = type.asElement();
+      if (typeVariables.containsKey(tsym)) {
+        return typeVariables.get(tsym);
+      }
+      UTypeVar var = UTypeVar.create(tsym.getSimpleName().toString());
+      typeVariables.put(tsym, var); // so the type variable can be used recursively in the bounds
+      var.setLowerBound(type.getLowerBound().accept(this, null));
+      var.setUpperBound(type.getUpperBound().accept(this, null));
+      return var;
+    }
+
+    @Override
+    public UForAll visitForAll(ForAll type, Void v) {
+      List<UTypeVar> vars = cast(templateTypes(type.getTypeVariables()), UTypeVar.class);
+      return UForAll.create(vars, type.qtype.accept(this, null));
+    }
+  };
 
   @SuppressWarnings("unchecked")
   public static ImmutableClassToInstanceMap<Annotation> annotationMap(Symbol symbol) {
