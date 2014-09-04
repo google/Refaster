@@ -27,6 +27,8 @@ import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.tools.JavaFileObject;
+
 /**
  * Representation of a mutable Java source file.
  * 
@@ -39,8 +41,12 @@ public class SourceFile {
 
   private final String path;
   private final StringBuilder sourceBuilder;
+  
+  public static SourceFile create(JavaFileObject fileObject) throws IOException {
+    return new SourceFile(fileObject.toUri().getPath(), fileObject.getCharContent(false));
+  }
 
-  public SourceFile(String path, String source) {
+  public SourceFile(String path, CharSequence source) {
     this.path = path;
     sourceBuilder = new StringBuilder(source);
   }

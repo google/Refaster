@@ -18,7 +18,6 @@ package com.google.errorprone.refaster;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
@@ -53,20 +52,20 @@ public class CompilerBasedTest {
   protected Iterable<JCCompilationUnit> compilationUnits;
   private Map<String, JCMethodDecl> methods;
   
-  protected void compile(TreeScanner scanner, String... lines) {
+  protected void compile(TreeScanner scanner, JavaFileObject fileObject) {
     JavaCompiler compiler = JavacTool.create();
     DiagnosticCollector<JavaFileObject> diagnosticsCollector =
         new DiagnosticCollector<JavaFileObject>();
     StandardJavaFileManager fileManager = 
         compiler.getStandardFileManager(diagnosticsCollector, Locale.ENGLISH, UTF_8);
-    this.sourceFile = new SourceFile("CompilerBasedTestInput.java", Joiner.on('\n').join(lines));
     JavacTaskImpl task = (JavacTaskImpl) compiler.getTask(CharStreams.nullWriter(), 
         fileManager,
         diagnosticsCollector,
         ImmutableList.<String>of(),
         null,
-        ImmutableList.of(JavaFileObjects.forSourceLines("CompilerBasedTestInput", lines)));
+        ImmutableList.of(fileObject));
     try {
+      this.sourceFile = SourceFile.create(fileObject);
       Iterable<? extends CompilationUnitTree> trees = task.parse();
       task.analyze();
       for (CompilationUnitTree tree : trees) {
@@ -77,8 +76,12 @@ public class CompilerBasedTest {
     }
     this.context = task.getContext();
   }
+  
+  protected void compile(TreeScanner scanner, String... lines) {
+    compile(scanner, JavaFileObjects.forSourceLines("CompilerBasedTestInput", lines));
+  }
 
-  protected void compile(String... lines) {
+  protected void compile(JavaFileObject fileObject) {
     final ImmutableMap.Builder<String, JCMethodDecl> methodsBuilder = ImmutableMap.builder();
     final ImmutableList.Builder<JCCompilationUnit> compilationUnitsBuilder = 
         ImmutableList.builder();
@@ -93,9 +96,13 @@ public class CompilerBasedTest {
         compilationUnitsBuilder.add(tree);
         super.visitTopLevel(tree);
       }
-    }, lines);
+    }, fileObject);
     this.methods = methodsBuilder.build();
     this.compilationUnits = compilationUnitsBuilder.build();
+  }
+
+  protected void compile(String... lines) {
+    compile(JavaFileObjects.forSourceLines("CompilerBasedTestInput", lines));
   }
   
   protected JCMethodDecl getMethodDeclaration(String name) {
