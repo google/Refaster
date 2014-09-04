@@ -51,8 +51,8 @@ public abstract class UAnyOf extends UExpression {
       negations.add(expression.negate());
     }
     return create(negations.build());
-  }
-
+  }  
+  
   @Override
   @Nullable
   public Unifier unify(JCTree target, @Nullable Unifier unifier) {
