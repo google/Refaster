@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UBinary extends UExpression implements BinaryTree {
+abstract class UBinary extends UExpression implements BinaryTree {
   private static final ImmutableBiMap<Kind, Integer> OP_CODES =
       new ImmutableBiMap.Builder<Kind, Integer>()
           .put(Kind.PLUS, JCTree.PLUS)

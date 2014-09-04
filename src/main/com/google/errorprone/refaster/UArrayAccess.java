@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UArrayAccess extends UExpression implements ArrayAccessTree {
+abstract class UArrayAccess extends UExpression implements ArrayAccessTree {
   public static UArrayAccess create(UExpression arrayExpr, UExpression indexExpr) {
     return new AutoValue_UArrayAccess(arrayExpr, indexExpr);
   }

@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UInstanceOf extends UExpression implements InstanceOfTree {
+abstract class UInstanceOf extends UExpression implements InstanceOfTree {
   public static UInstanceOf create(UExpression expression, UTree<?> type) {
     return new AutoValue_UInstanceOf(expression, type);
   }

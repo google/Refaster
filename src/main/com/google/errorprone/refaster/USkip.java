@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
  *
  * @author lowasser@google.com (Louis Wasserman)
  */
-public final class USkip extends UStatement implements EmptyStatementTree {
+final class USkip extends UStatement implements EmptyStatementTree {
   public static final USkip INSTANCE = new USkip();
   
   private USkip() {}

@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UEnhancedForLoop extends UStatement implements EnhancedForLoopTree {
+abstract class UEnhancedForLoop extends UStatement implements EnhancedForLoopTree {
   public static UEnhancedForLoop create(
       UVariableDecl variable, UExpression elements, UStatement statement) {
     return new AutoValue_UEnhancedForLoop(variable, elements, statement);

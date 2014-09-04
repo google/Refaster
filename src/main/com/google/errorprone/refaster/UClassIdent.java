@@ -39,7 +39,7 @@ import javax.lang.model.element.Name;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UClassIdent extends UIdent {
+abstract class UClassIdent extends UIdent {
   @VisibleForTesting
   public static UClassIdent create(String qualifiedName) {
     List<String> topLevelPath = new ArrayList<>();

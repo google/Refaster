@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UTypeApply extends UExpression implements ParameterizedTypeTree {
+abstract class UTypeApply extends UExpression implements ParameterizedTypeTree {
   public static UTypeApply create(UExpression type, List<UExpression> typeArguments) {
     return new AutoValue_UTypeApply(type, ImmutableList.copyOf(typeArguments));
   }

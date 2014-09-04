@@ -31,7 +31,7 @@ import javax.lang.model.type.TypeKind;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UPrimitiveTypeTree extends UExpression implements PrimitiveTypeTree {
+abstract class UPrimitiveTypeTree extends UExpression implements PrimitiveTypeTree {
 
   public static UPrimitiveTypeTree create(TypeKind kind) {
     return new AutoValue_UPrimitiveTypeTree(UPrimitiveType.create(kind));

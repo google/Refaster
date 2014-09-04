@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UConditional extends UExpression implements ConditionalExpressionTree {
+abstract class UConditional extends UExpression implements ConditionalExpressionTree {
   public static UConditional create(
       UExpression conditionExpr, UExpression trueExpr, UExpression falseExpr) {
     return new AutoValue_UConditional(conditionExpr, trueExpr, falseExpr);

@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UAssignOp extends UExpression implements CompoundAssignmentTree {
+abstract class UAssignOp extends UExpression implements CompoundAssignmentTree {
   private static final ImmutableBiMap<Kind, Integer> TAG = ImmutableBiMap.<Kind, Integer>builder()
       .put(Kind.PLUS_ASSIGNMENT, JCTree.PLUS_ASG)
       .put(Kind.MINUS_ASSIGNMENT, JCTree.MINUS_ASG)

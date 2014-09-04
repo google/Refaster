@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
  * A variable that can match a sequence of expressions.
  */
 @AutoValue
-public abstract class URepeated extends UExpression {
+abstract class URepeated extends UExpression {
   public static URepeated create(String identifier, UExpression expression) {
     return new AutoValue_URepeated(identifier, expression);
   }

@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UDoWhileLoop extends UStatement implements DoWhileLoopTree {
+abstract class UDoWhileLoop extends UStatement implements DoWhileLoopTree {
   public static UDoWhileLoop create(UStatement body, UExpression condition) {
     return new AutoValue_UDoWhileLoop(body, condition);
   }

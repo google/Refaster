@@ -34,7 +34,7 @@ import javax.lang.model.type.TypeKind;
  * @author Louis Wasserman
  */
 @AutoValue
-public abstract class UPrimitiveType extends UType {
+abstract class UPrimitiveType extends UType {
 
   public static UPrimitiveType create(TypeKind typeKind) {
     checkArgument(isDeFactoPrimitive(typeKind), 

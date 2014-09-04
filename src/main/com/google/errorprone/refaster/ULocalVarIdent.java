@@ -32,7 +32,7 @@ import javax.lang.model.element.Name;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class ULocalVarIdent extends UIdent {
+abstract class ULocalVarIdent extends UIdent {
   /**
    * A key in a {@code Bindings} associated with a local variable of the specified name.
    */

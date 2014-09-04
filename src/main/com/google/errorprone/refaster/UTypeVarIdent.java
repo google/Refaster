@@ -33,7 +33,7 @@ import javax.lang.model.element.Name;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UTypeVarIdent extends UIdent {
+abstract class UTypeVarIdent extends UIdent {
   public static UTypeVarIdent create(String name) {
     return new AutoValue_UTypeVarIdent(name);
   }

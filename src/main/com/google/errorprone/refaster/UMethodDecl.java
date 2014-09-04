@@ -36,7 +36,7 @@ import javax.lang.model.element.Name;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UMethodDecl extends UTree<JCMethodDecl> implements MethodTree {
+abstract class UMethodDecl extends UTree<JCMethodDecl> implements MethodTree {
   public static UMethodDecl create(UModifiers modifiers, String name, UExpression returnType,
       Iterable<UVariableDecl> parameters, Iterable<UExpression> thrown, UBlock body) {
     return new AutoValue_UMethodDecl(modifiers, name, returnType, ImmutableList.copyOf(parameters), 

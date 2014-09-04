@@ -38,7 +38,7 @@ import javax.lang.model.element.Modifier;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UModifiers extends UTree<JCModifiers> implements ModifiersTree {
+abstract class UModifiers extends UTree<JCModifiers> implements ModifiersTree {
   public static UModifiers create(long flagBits, UAnnotation... annotations) {
     return create(flagBits, ImmutableList.copyOf(annotations));
   }

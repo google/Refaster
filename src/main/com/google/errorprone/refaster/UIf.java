@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UIf extends UStatement implements IfTree {
+abstract class UIf extends UStatement implements IfTree {
   public static UIf create(
       UExpression condition, UStatement thenStatement, UStatement elseStatement) {
     return new AutoValue_UIf(condition, thenStatement, elseStatement);

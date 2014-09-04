@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UArrayTypeTree extends UExpression implements ArrayTypeTree {
+abstract class UArrayTypeTree extends UExpression implements ArrayTypeTree {
   public static UArrayTypeTree create(UExpression elementType) {
     return new AutoValue_UArrayTypeTree(elementType);
   }

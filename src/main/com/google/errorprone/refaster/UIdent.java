@@ -24,7 +24,7 @@ import com.sun.source.tree.TreeVisitor;
  * 
  * @author lowasser@google.com (Louis Wasserman)
  */
-public abstract class UIdent extends UExpression implements IdentifierTree {
+abstract class UIdent extends UExpression implements IdentifierTree {
   @Override
   public <R, D> R accept(TreeVisitor<R, D> visitor, D data) {
     return visitor.visitIdentifier(this, data);

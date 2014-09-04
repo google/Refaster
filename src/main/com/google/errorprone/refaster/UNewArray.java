@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
  * {@link UTree} version of {@link NewArrayTree}, which represents an array instantiation.
  */
 @AutoValue
-public abstract class UNewArray extends UExpression implements NewArrayTree {
+abstract class UNewArray extends UExpression implements NewArrayTree {
 
   public static UNewArray create(UExpression type,
       List<? extends UExpression> dimensions,

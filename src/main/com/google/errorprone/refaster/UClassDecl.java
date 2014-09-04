@@ -43,7 +43,7 @@ import javax.lang.model.element.Name;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UClassDecl extends UStatement implements ClassTree {
+abstract class UClassDecl extends UStatement implements ClassTree {
   public static UClassDecl create(UMethodDecl... members) {
     return create(ImmutableList.copyOf(members));
   }

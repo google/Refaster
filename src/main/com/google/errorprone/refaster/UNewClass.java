@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UNewClass extends UExpression implements NewClassTree {
+abstract class UNewClass extends UExpression implements NewClassTree {
 
   public static UNewClass create(UExpression enclosingExpression,
       List<? extends UExpression> typeArguments, UExpression identifier,

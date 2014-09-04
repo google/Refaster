@@ -32,7 +32,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UParens extends UExpression implements ParenthesizedTree {
+abstract class UParens extends UExpression implements ParenthesizedTree {
   public static UParens create(UExpression expression) {
     return new AutoValue_UParens(expression);
   }

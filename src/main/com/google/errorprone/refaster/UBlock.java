@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UBlock extends UStatement implements BlockTree {
+abstract class UBlock extends UStatement implements BlockTree {
   public static UBlock create(List<UStatement> statements) {
     return new AutoValue_UBlock(ImmutableList.copyOf(statements));
   }

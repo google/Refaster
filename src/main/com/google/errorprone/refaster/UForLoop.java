@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
  * @author lowasser@google.com (Louis Wasserman)
  */
 @AutoValue
-public abstract class UForLoop extends UStatement implements ForLoopTree {
+abstract class UForLoop extends UStatement implements ForLoopTree {
   
   public static UForLoop create(
       Iterable<? extends UStatement> initializer, @Nullable UExpression condition,

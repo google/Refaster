@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
  * error-prone {@code Matcher}.
  */
 @AutoValue
-public abstract class UMatches extends UExpression {
+abstract class UMatches extends UExpression {
   public static UMatches create(Class<? extends Matcher<? super ExpressionTree>> matcherClass,
       boolean positive, UExpression expression) {
     // Verify that we can instantiate the Matcher
